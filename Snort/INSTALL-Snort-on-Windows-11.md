@@ -1,167 +1,149 @@
-# Install Snort 2 on Windows 11 (with Npcap)
+# Lab 1 - Installing Snort 3
+This lab is going to focus on installing Snort 3 and  it's dependancies. This is being done on a Kali Linux VM
 
-This guide documents how to install Snort on Windows 11 using the last Windows installer available (Snort 2.9.20) and Npcap 1.83. It also covers adding Snort to your system PATH so you can run it from any terminal, and verifying the installation.
+# 1 - Update, Upgrade, Install
+1. First let's update and upgrade our system
+   ```
+   sudo apt update && sudo apt -y upgrade
+   ```
+2. Install the latest version of Snort
+   ```
+   sudo apt -y install snort
+   ```
+3. Check the version using `snort -V`. If successfull, you should see something like:
+   <img width="656" height="241" alt="image" src="https://github.com/user-attachments/assets/ce97c3df-e2ff-413c-bbb9-a7761b6aedd4" />
+# 2 - Installing Snort 3 Dependancies
+As you can see from the screenshot above, the Snort package from Debian comes with a lot of of the required packages already installed:
+- DAQ
+- LuaJIT
+- OpenSSL
+- libpcap
+- PCRE
+- ZLIB
+- LZMA
+## 2.1 - Hyperscan
+One thing missing is [Hyperscan](http://intel.github.io/hyperscan/dev-reference/intro.html), which is a high-performance, open-source regular expression matching engine originally developed by Intel. You can use Snort 3 without Hyperscan, but you'll be hit with some pretty significant tradeoffs:
+- Slower performance with alrge rulesets
+- Potential scaling limitations with high-throughput environments
+- Snort 3 will not be as "future proof" since newer rulesets may leverage this
 
-Notes:
-- Snort 3 currently does not provide an official Windows installer. This guide therefore uses Snort 2.9.20 for Windows.
-- All steps below were performed on Windows 11 with Administrator rights.
-
-Contents:
-- Prerequisites
-- 1) Download the Snort 2.9.20 Windows installer
-- 2) Install Snort 2.9.20
-- 3) Install Npcap 1.83
-- 4) Add Snort to the PATH environment variable
-- 5) Verify the installation
-- Troubleshooting
-
-Screenshots:
-Each screenshot referenced below should include a visible red rectangle or highlight over the exact UI element being discussed (links, buttons, checkboxes). Save the images in `assets/snort-windows/images/` using the file names shown with each figure.
-
-## Prerequisites
-
-- Windows 11 with Administrator access
-- Internet connectivity to download installers
-- Willingness to install a kernel packet capture driver (Npcap)
-
-## 1) Download the Snort 2.9.20 Windows installer
-
-1. Visit https://www.snort.org/downloads#additional_downloads
-2. Under the “Snort 2” section, locate “Binaries”.
-3. Click “Snort_2_9_20_Installer.x64.exe”.
-
-Figure 1 (save as `snort-downloads-binaries.png`):
-![Snort downloads page — the “Binaries” link with “Snort_2_9_20_Installer.x64.exe” highlighted](assets/snort-windows/images/snort-downloads-binaries.png)
-
-Why Snort 2? Snort 3 currently has no official Windows installer; as such, the Windows path uses Snort 2.9.20. You can still capture traffic and test rules with Snort 2 on Windows.
-
-## 2) Install Snort 2.9.20
-
-1. Launch `Snort_2_9_20_Installer.x64.exe` as Administrator.
-2. Accept the license agreement.
-3. Leave default components selected (Snort, Dynamic Modules, Documentation).
-4. Choose an install directory. In this guide we use `E:\liamh\Snort`.
-5. Complete the wizard.
-6. At the end, the installer reminds you that Npcap is required — we’ll install it in the next section.
-
-Figures:
-- Figure 2 (save as `snort-setup-license.png`):  
-  ![Snort Setup — License Agreement page with “I Agree” highlighted](assets/snort-windows/images/snort-setup-license.png)
-- Figure 3 (save as `snort-setup-components.png`):  
-  ![Snort Setup — Choose Components page with all components checked/highlighted](assets/snort-windows/images/snort-setup-components.png)
-- Figure 4 (save as `snort-setup-destination.png`):  
-  ![Snort Setup — Destination Folder page with E:\liamh\Snort highlighted](assets/snort-windows/images/snort-setup-destination.png)
-- Figure 5 (save as `snort-setup-complete.png`):  
-  ![Snort Setup — Completed page with Close highlighted](assets/snort-windows/images/snort-setup-complete.png)
-- Figure 6 (save as `snort-setup-npcap-required.png`):  
-  ![Snort Setup — Message indicating Npcap is required highlighted](assets/snort-windows/images/snort-setup-npcap-required.png)
-
-## 3) Install Npcap 1.83
-
-1. Go to https://npcap.com/#download
-2. Download “Npcap 1.83 installer”.
-3. Run the installer as Administrator.
-4. Recommended options:
-   - Leave “Install Npcap in WinPcap API-compatible Mode” checked (helps older tools).
-   - Optionally enable “Restrict Npcap driver’s access to Administrators only” for tighter security in lab/production.
-   - Leave others at defaults unless you specifically need 802.11 raw capture.
-5. Complete the install.
-
-Figures:
-- Figure 7 (save as `npcap-download-page.png`):  
-  ![Npcap download page — “Npcap 1.83 installer” link highlighted](assets/snort-windows/images/npcap-download-page.png)
-- Figure 8 (save as `npcap-setup-license.png`):  
-  ![Npcap Setup — License Agreement with “I Agree” highlighted](assets/snort-windows/images/npcap-setup-license.png)
-- Figure 9 (save as `npcap-setup-options.png`):  
-  ![Npcap Setup — Options with “Install Npcap in WinPcap API-compatible Mode” highlighted](assets/snort-windows/images/npcap-setup-options.png)
-- Figure 10 (save as `npcap-setup-finished.png`):  
-  ![Npcap Setup — Finished page with Finish highlighted](assets/snort-windows/images/npcap-setup-finished.png)
-
-## 4) Add Snort to the PATH environment variable
-
-Adding Snort’s `bin` directory to PATH lets you run `snort` from any terminal.
-
-Target path used in this guide:
-- `E:\liamh\Snort\bin`
-
-Steps:
-
-1. Open the Start menu, search “View advanced system settings”, and open it.
-2. In the System Properties window, go to the “Advanced” tab and click “Environment Variables…”.
-3. Under “System variables”, select “Path” and click “Edit…”.
-4. Click “New” and add `E:\liamh\Snort\bin`.
-5. Click OK to close all dialogs.
-
-Figures:
-- Figure 11 (save as `system-properties-advanced.png`):  
-  ![System Properties — Advanced tab with “Environment Variables…” highlighted](assets/snort-windows/images/system-properties-advanced.png)
-- Figure 12 (save as `environment-variables.png`):  
-  ![Environment Variables dialog — “Path” (System variables) highlighted](assets/snort-windows/images/environment-variables.png)
-- Figure 13 (save as `edit-path-add-snort-bin.png`):  
-  ![Edit environment variable — new entry E:\liamh\Snort\bin highlighted](assets/snort-windows/images/edit-path-add-snort-bin.png)
-
-Optional variables (helpful for tooling/scripts):
-- `SNORT_HOME` = `E:\liamh\Snort`
-- `SNORT_CONF` = `E:\liamh\Snort\etc\snort.conf`
-
-## 5) Verify the installation
-
-Open a new Command Prompt window (PATH changes require a new shell) and run:
-
+First, clone the Hyperscan git repo to your preferred location (for me I keep all my git repos in ~/git_packages)
 ```
-snort -V
+git clone https://github.com/intel/hyperscan.git
 ```
+## 2.2 - Hyperscan Dependancies
+Now we begin dependancy hell!
 
-Expected output should show the Snort version and linked libraries, for example:
+Hyperscan itself has a few dependancies that we need to install. Just get the latest versions for each and you should be fine.
 
+<img width="669" height="257" alt="image" src="https://github.com/user-attachments/assets/c2e76120-95c3-4ed1-a4a1-cc1484e06d36" />
+
+1. Install CMake
+   ```
+   sudo apt install -y cmake
+   ```
+   Check if CMake installed correcly
+   ```
+   cmake --version
+   ```
+2. Python should already be installed on your Kali Linux machine since it's included in the package. You can confirm by running the command below to make sure you at least have the version required
+   ```
+   python --version
+   ```
+   If you don't have Python installed:
+   ```
+   sudo apt -y install python3 python3-pip
+   ```
+### 2.3.1 - Ragel
+Installing [Ragel](http://www.colm.net/open-source/ragel/) requires a few extra steps. Ragel is a state machine compiler
+1. Download the latest tar ball form the official website (I installed it in my ~/Downloads directory using wget from the temrinal)
+   ```
+   cd ~/Downloads
+   wget http://www.colm.net/files/ragel/ragel-6.10.tar.gz
+   ```
+2. Extract the tar ball. Choose whatever target location you like I just kept it in the Downloads directory
+   ```
+   tar -xvzf /path/to/ragel.tar.gz 
+   ```
+3. Move into the extracted Ragel directory and run the configuration. This will configure your system for Ragel and generate the makefile
+   ```
+   cd /path/to/extracted/ragel/directory
+   ./configure
+   ```
+4. Compile the source code into binaries
+   ```
+   make
+   ```
+5. Now actually install Ragel
+   ```
+   sudo make install
+   ```
+6. If all went well, run `ragel --version` and you should see something like:
+   ```
+   Ragel State Machine Compiler version 6.10 March 2017
+   Copyright (c) 2001-2009 by Adrian Thurston
+   ```
+#### 2.3.1.1 - Ragel Dependancies (COLM)
+Ragel itself has a dependancy which is COLM (COmputer Language Machinery). [COLM](https://github.com/adrian-thurston/colm) is a programming language for language processors...whatever that means, but was actually developed my the same person who created Ragel.
+
+1. Clone the COLM repo to your desired location (again, I did ~/git_packages)
+   ```
+   git clone https://github.com/adrian-thurston/colm.git
+   ```
+2. Move into the COLM directory and this time we need to do some bootstrapping and generate the configuration script
+   ```
+   cd /path/to/colm
+   ./autogen.sh
+   ```
+3. Now we can run the configuration and generate the makefile
+   ```
+   ./configure
+   ```
+4. Compile and create binaries
+   ```
+   make
+   ```
+5. Install colm
+   ```
+   sudo make install
+   ```
+All done!
+### 2.3.2 - Boost
+This is the final dependancy to install. [Boost](https://www.boost.org/) is a collection of C++ libraries. The GitHub repo for Boost can be found [here](https://github.com/boostorg/boost?tab=readme-ov-file)
+
+Install Ragel
 ```
---> Snort! <--
-Version 2.9.20-WIN64 GRE (Build 82)
-By Martin Roesch & The Snort Team: http://www.snort.org/contact#team
-Copyright (C) 2014-2022 Cisco and/or its affiliates. All rights reserved.
-Copyright (C) 1998-2013 Sourcefire, Inc., et al.
-Using PCRE version: 8.10 2010-06-25
-Using ZLIB version: 1.2.11
+wget http://www.colm.net/files/ragel/ragel-6.10.tar.gz
 ```
 
-Figure 14 (save as `cmd-snort-version.png`):
-![Command Prompt — snort -V output highlighted](assets/snort-windows/images/cmd-snort-version.png)
+Extract Ragel tar
+```
+tar -xvzf /path/to/ragel.tar.gz
+```
 
-If the command is not found, confirm the PATH entry points to `E:\liamh\Snort\bin` and that you opened a fresh terminal after editing PATH.
+Configure
+```
+./configure
+```
 
-## Troubleshooting
+Make
+```
+make
+```
 
-- Open a new terminal after editing PATH. Old windows won’t have the updated environment.
-- Run Command Prompt as Administrator for operations that require elevated permissions.
-- Ensure Npcap service is installed and running:
-  - Services name is typically “Npcap Packet Driver (NPCAP)”.
-- If Snort can’t capture traffic:
-  - Verify Npcap was installed with WinPcap API-compatible mode enabled.
-  - Reinstall Npcap 1.83 and reboot.
-- If you installed Snort to a different drive/folder, update PATH accordingly.
-- Confirm the `bin` directory actually contains `snort.exe` (e.g., `E:\liamh\Snort\bin\snort.exe`).
+Install
+```
+sudo make install
+```
 
-## File/Folder Summary
+Check Ragel installation
+```
+ragel --version
+```
 
-- Snort install dir (example): `E:\liamh\Snort\`
-- Snort binaries: `E:\liamh\Snort\bin\`
-- Images for this guide (create this folder in your repo):  
-  `assets/snort-windows/images/`
-  - `snort-downloads-binaries.png`
-  - `snort-setup-license.png`
-  - `snort-setup-components.png`
-  - `snort-setup-destination.png`
-  - `snort-setup-complete.png`
-  - `snort-setup-npcap-required.png`
-  - `npcap-download-page.png`
-  - `npcap-setup-license.png`
-  - `npcap-setup-options.png`
-  - `npcap-setup-finished.png`
-  - `system-properties-advanced.png`
-  - `environment-variables.png`
-  - `edit-path-add-snort-bin.png`
-  - `cmd-snort-version.png`
+Download Boost tar
+```
+wget https://archives.boost.io/release/1.89.0/source/boost_1_89_0.tar.gz
+```
 
-Ensure each screenshot includes a red rectangle or highlight around the UI element referenced in its caption before committing to GitHub.
 
-— End —
