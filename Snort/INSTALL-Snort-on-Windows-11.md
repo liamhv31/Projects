@@ -111,39 +111,57 @@ All done!
 ### 2.3.2 - Boost
 This is the final dependancy to install. [Boost](https://www.boost.org/) is a collection of C++ libraries. The GitHub repo for Boost can be found [here](https://github.com/boostorg/boost?tab=readme-ov-file)
 
-Install Ragel
-```
-wget http://www.colm.net/files/ragel/ragel-6.10.tar.gz
-```
+1. Download the Boost latest tar ball from the official site (again, I donwnloaded it into my ~/Downloads directory)
+   ```
+   wget https://archives.boost.io/release/1.89.0/source/boost_1_89_0.tar.gz
+   ```
+2. Extract the tar ball. Choose whatever target location you like I just kept it in the Downloads directory (this will take some time)
+   ```
+   cd ~/Downloads
+   tar -xvzf /path/to/boost.tar.gz
+   ```
+3. Move into the directory and run the bootstrapping script
+   ```
+   cd /path/to/boost
+   ./bootstrap.sh
+   ```
+4. Now build Boost by running:
+   ```
+   ./b2
+   ```
+5. Finally, install Boost (this will take a while))
+   ```
+   sudo ./b2 install
+   ```
 
-Extract Ragel tar
+To confirm it's installation
 ```
-tar -xvzf /path/to/ragel.tar.gz
+The Boost C++ Libraries were successfully built!
 ```
-
-Configure
-```
-./configure
-```
-
-Make
-```
-make
-```
-
-Install
-```
-sudo make install
-```
-
-Check Ragel installation
-```
-ragel --version
-```
-
-Download Boost tar
-```
-wget https://archives.boost.io/release/1.89.0/source/boost_1_89_0.tar.gz
-```
+## 2.3 - Finalizing Hyperscan Installation
+Now that all of the dependancies are installed, we can finally finish the Hyperscan installation.
+1. Start by creating your build directory (create it where you like but to keep it clean I created it in the local repo for Hyperscan)
+   ```
+   cd /path/to/hyperscan/repo
+   mkdir build && cd build
+   ```
+2. Now generate the build files. If you followed what I did then you can just run `cmake ..` since the required make files are in the root of the projects repo. Otherwise:
+   ```
+   cmake /path/to/hyperscan/repo
+   ```
+3. Compile Hyperscan (this will take a while)
+   ```
+   make
+   ```
+4. Install Hyperscan
+   ```
+   sudo make install
+   ```
+5. To confirm installation, run the Hyperscan unit tests:
+   ```
+   cd /path/to/hyperscan/build/bin
+   ./unit-hyperscan
+   ```
+   You should see thousands of unit tests being ran with words "RUN OK" which means it's working!
 
 
