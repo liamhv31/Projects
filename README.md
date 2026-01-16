@@ -1,2 +1,2 @@
 # Projects
-A collection of projects to show what I've done.
+A collection of projects and labs to show my knowledge and experience.
