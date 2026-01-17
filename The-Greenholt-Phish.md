@@ -1,4 +1,4 @@
-<img width="476" height="92" alt="image" src="https://github.com/user-attachments/assets/11a593a9-4159-467e-9505-4e578f980c11" />## The Greenholt Phish
+## The Greenholt Phish
 
 ### Overview
 A Sales Executive at Greenholt PLC received an email that he didn't expect to receive from a customer. He claims that the customer never uses generic greetings such as "Good day" and didn't expect any amount of money to be transferred to his account. The email also contains an attachment that he never requested. He forwarded the email to the SOC (Security Operations Center) department for further investigation.
