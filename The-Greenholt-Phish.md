@@ -1,4 +1,4 @@
-## The Greenholt Phish
+<img width="476" height="92" alt="image" src="https://github.com/user-attachments/assets/11a593a9-4159-467e-9505-4e578f980c11" />## The Greenholt Phish
 
 ### Overview
 A Sales Executive at Greenholt PLC received an email that he didn't expect to receive from a customer. He claims that the customer never uses generic greetings such as "Good day" and didn't expect any amount of money to be transferred to his account. The email also contains an attachment that he never requested. He forwarded the email to the SOC (Security Operations Center) department for further investigation.
@@ -59,10 +59,27 @@ This will show the **mail-routing trace**, showing every destination the email h
 **Answer**: 192.119.71.157
 
 ### Question 6 - Who is the owner of the Originating IP? (Do not include the "." in your answer.)
+This admittedly took me some time to figure out. At first, I thought the answer was `mutawamarine.com`, as that is who the sending server is claiming to be, but this was not correct. After a bit of pondering I decided to try and lookup that domain in VirusTotal, WHOIS (DomainTools), and Cisco Talos. I found out more about the owners of that domain but none of that was the answer I needed. I then did the same thing for the server itself, to see if I could find out who actually owned it. VirusTotal didn't provide me much besides the fact that it was a Hostwinds domain (obvious given the domain name). I then tried a WHOIS lookup and same thing. It only kept showing Hostwinds, so I tried that as an answer but it didn't match the pattern it was looking for. After going through the WHOIS results again I noticed this:
+
+<img width="387" height="349" alt="image" src="https://github.com/user-attachments/assets/28fa4bce-12c3-4b72-9836-048cc794204a" />
+
+The question says not to include the "." in the answer, and without it, this matches the pattern of the answer it's looking for. Sure enough, it was correct. I'm a bit surprised as I interpreted the question as "who owns the domain which is using Hostwinds to host it". I doubt that Hostwinds _actually_ owns that domain themselves, and it is likely someone using Hostwind's services to host their mail VPS (virtual private server).
+
+**Asnwer**: Hostwinds LLC
 
 ### Question 7 - What is the SPF record for the Return-Path domain?
+You can find the the `Return-Path` field in the email source, just **Ctrl+F** for it. 
+
+<img width="476" height="92" alt="image" src="https://github.com/user-attachments/assets/b3b430de-01c7-4ad9-a69e-763125eda6f6" />
+
+Once you have that, use any SPF record lookup tool for this. I used [MX Toolbox SuperTool - SPF Record Checker](https://mxtoolbox.com/SuperTool.aspx?action=spf%3amutawamarine.com&run=toolpage).
+
+**Answer**: v=spf1 include:spf.protection.outlook.com -all
 
 ### Question 8 - What is the DMARC record for the Return-Path domain?
+Now just use a DMARC record checker. I used MX Toolbox SuperTool again but this time their [DMARC Lookup](https://mxtoolbox.com/dmarc.aspx) tool of course.
+
+**Answer**: v=DMARC1; p=quarantine; fo=1
 
 ### Question 9 - What is the name of the attachment?
 
