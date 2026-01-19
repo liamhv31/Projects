@@ -82,9 +82,43 @@ Now just use a DMARC record checker. I used MX Toolbox SuperTool again but this 
 **Answer**: v=DMARC1; p=quarantine; fo=1
 
 ### Question 9 - What is the name of the attachment?
+No matter the email client, you can usually find this by looking at the email itself. It will be located at the top or the bottom of the email. If you want to find it in the source though, just look for the `Content-Type` and `Content-Disposition` fields.
+
+**Answer**: SWT_#09674321____PDF__.CAB
 
 ### Question 10 - What is the SHA256 hash of the file attachment?
+There are a couple different ways you can do this. The easiest is to save the attachement (do **not** double-click it, do **not** open it) from the email and use the command line to show the hash value. You can do this on Linux by doing the following: `sha256sum SWT_#09674321____PDF__.CAB`.
+
+<img width="957" height="845" alt="image" src="https://github.com/user-attachments/assets/5e73c63e-925b-4312-ac3b-e64b3147d080" />
+<img width="459" height="137" alt="image" src="https://github.com/user-attachments/assets/34cc5d3b-af5b-487c-ae67-bdb83a44dee3" />
+
+If you can though, I would **highly** recommend that you do this in a VM or sandbox to be extra safe in case of accidently opening or running anything. Basically a system that is used for the purpose of analysis and can be disposed of after, without having the risk of infecting the network. In a real SOC environment, you _should_ have sandboxing in place automatically that sends any attachments directly from the email to this sandbox for automatic detonation and analysis.
+
+**Answer**: 2e91c533615a9bb8929ac4bb76707b2444597ce063d84a4b33525e25074fff3f
 
 ### Question 11 - What is the attachments file size? (Don't forget to add "KB" to your answer, NUM KB)
+This one stumped me for a few minutes. My first thought was to just `ls -la` the directory my file was in so I could see how many bytes the file was, then just convert to kilobytes.
+
+<img width="460" height="82" alt="image" src="https://github.com/user-attachments/assets/6ddb595d-dff6-4089-8a27-64c74e35a3d2" />
+
+At first, I answered **409.87** (rounded), but that wasn't right, then I tried **409.86** to see if it didn't care about rounding but that wasn't it either. I really didn't understand why it wasn't correct. I then decided to look up the file in VirusTotal to see what info I could find there. Sure enough, it shows the file size but it was slightly different, even though the hash is the same.
+
+<img width="947" height="473" alt="image" src="https://github.com/user-attachments/assets/930f6444-582d-4574-8850-4fe36957b260" />
+
+Sooo why? I think I know: You will commonly see two different ways to convert bytes to it's more reduced form - using **Kilobytes** (KB) or **Kibibyte** (KiB). KB is a decimal system while KiB is a binary system, more common in computing.
+
+Bytes &rarr; Kilobytes: Divide by 1,000<br>
+Bytes &rarr; Kibibyte: Divide by 1,024
+
+I initially converted into Kilobytes, but VirusTotal converts to Kibibytes. So note to self - when determining file size, storage capacity, etc., use **KiB**!
+
+**Answer**: 400.26 KB
 
 ### Question 12 - What is the actual file extension of the attachment?
+As the question implies, the actual file extension is not **CAB**, which is an archive-file format for Microsoft Windows. You can see the actual file extension type in the VirusTotal search. Look either at the file tags in the scan overview or in the **Basic properties** section of the **Details** tab.
+
+You should seldom trust the filename or extension type you see from the email client, file explorer, or command line. These things are cosmetic and can easily by manipulated. The bytes don't lie though :). When in doubt, **check the bytes**!
+
+<img width="957" height="476" alt="image" src="https://github.com/user-attachments/assets/25201c5e-b1f4-4cbe-9d88-676de6e2b38a" />
+
+**Answer**: RAR
