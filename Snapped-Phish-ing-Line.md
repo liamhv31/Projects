@@ -37,6 +37,17 @@ Then we just need to defang it using **CyberChef**. Make sure you select all of 
 **Answer**: hxxp[://]kennaroads[.]buzz/data/Update365/office365/40e7baa2f826a57fcf04e5202526f8bd/?email=zoe[.]duncan@swiftspend[.]finance&error
 
 ### Question 4 - What is the URL to the .zip archive of the phishing kit? (defanged format)
+We can find this by searching through the URL paths of the phsihing domain. This can be safely done in the VM we have, without risk of infecting our network. I started by looking at the main domain - **hxxp[://]kennaroads[.]buzz**. Nothing really stood out to me there.
+
+<img width="883" height="802" alt="image" src="https://github.com/user-attachments/assets/21d260fb-0db9-4186-acfc-5fc84137edde" />
+
+If we look at the URL again, we can see that there is a **data** path. That sounds promising. If we navigate to **hxxp[://]kennaroads[.]buzz/data**, we see this:
+
+<img width="490" height="278" alt="image" src="https://github.com/user-attachments/assets/f96f56d1-cd8f-4f39-bd27-a8e05ec23df7" />
+
+The zip archive is there! Now we just need to copy and paste the link to that zip archive in CyberChef to defang it and we have our answer.
+
+**Answer**: hxxp[://]kennaroads[.]buzz/data/Update365[.]zip
 
 ### Question 5 - What is the SHA256 hash of the phishing kit archive?
 
