@@ -146,6 +146,7 @@ You could also do it this way: `grep -RE --binary-files=without-match "[a-zA-Z0-
 ./Scriptup/marvid:	$headers = "From: Blessing <blessing@heaven.com>";
 ```
 
+Lots of stuff! But only a couple emails. Now, you can just trial and error these to see which is the answer, but it's important to actually understand "why?" it's the answer.
 
 ### Question 10 - The adversary used other email addresses in the obtained phishing kit. What is the email address that ends in "@gmail.com"?
 
