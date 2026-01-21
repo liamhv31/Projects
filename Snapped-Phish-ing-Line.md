@@ -50,14 +50,102 @@ The zip archive is there! Now we just need to copy and paste the link to that zi
 **Answer**: hxxp[://]kennaroads[.]buzz/data/Update365[.]zip
 
 ### Question 5 - What is the SHA256 hash of the phishing kit archive?
+Since we're in a controlled and secure environment, we can download the zip archive and check the hash. I used the `sha256sum Update365.zip` command.
+
+<img width="714" height="39" alt="image" src="https://github.com/user-attachments/assets/2df931b6-87e1-4ccb-ad1f-83b6c06cdd20" />
+
+**Answer**: ba3c15267393419eb08c7b2652b8b6b39b406ef300ae8a18fee4d16b19ac9686
 
 ### Question 6 - When was the phishing kit archive first submitted? (format: YYYY-MM-DD HH:MM:SS UTC)
+Not sure about other OSINT tools, but you can find this info easily with VirusTotal. Submit the hash and look at the **History** section under the **Details** tab.
+
+<img width="1603" height="889" alt="image" src="https://github.com/user-attachments/assets/1e49b10c-7969-4741-abb6-f93480ae07eb" />
+
+**Answer**: 2020-04-08 21:55:50 UTC
 
 ### Question 7 - When was the SSL certificate the phishing domain used to host the phishing kit archive first logged? (format: YYYY-MM-DD)
+Unfortunately, the SSL certificate is no longer available to answer this question, so they give you the answer.
+
+**Answer**: 2020-04-08 21:55:50 UTC
 
 ### Question 8 - What was the email address of the user who submitted their password twice?
+I wasn't sure on how to find the answer to this riht away. My thought process ended up being that the attacker would have this information, not us. I started looking through the **data** URL path and found a **log.txt** file at **hxxp[://]kennaroads[.]buzz/data/Update365/log[.]txt**. This is where the answer was.
+
+<img width="942" height="803" alt="image" src="https://github.com/user-attachments/assets/ce303572-5a31-49b7-be9c-f9ddb9ae4981" />
+
+**Answer**: michael.ascot@swiftspend.finance
 
 ### Question 9 - What was the email address used by the adversary to collect compromised credentials?
+First, I thought this was the sender email address, but this is just the email that the adversary used to conduct the phishing campaign. I then searched the email source for any other email address the attacker may have used. There was an email used for a fake opt-out option for the phishing emails, but that was it. I also couldn't find anything in the **data** URL path. There was another email in the **log.txt** file that didn't belong to the victims of our phishing samples, but that is just another victim. Next step is to analyze the phishing kit itself. This would be the **Update365.zip** archive we downloaded earlier.
+
+I unzipped the archive using the following command (from the directory of the zip archive): `unzip Update365.zip`. From there, I was able to navigate into `Update365/office365` and see a whole bunch of stuff.
+
+<img width="596" height="305" alt="image" src="https://github.com/user-attachments/assets/6c26825f-3c7b-448e-a8f1-1865b8ffc443" />
+
+This was a bit overwhelming, and I wasn't sure where to begin looking. All I know is that I needed to fins an email address. Thankfully, there is a very powerful and helpful tool called `grep`. When combined with some regex, this should help us tremendously. I need to search through every file in the `office365` directory, including all of the subdirectories, for email addresses. This means I need to use grep **recursively**. This can be achieved with the `-R` flag.
+
+I'm also using a long and somewhat complex regex pattern to find email addresses: `[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}`. If I just grep regex normally, it uses **Basic Regular Expressions (BRE)** by default. This is a bit older and harder to work with since some characters are treated as literals, and more things need to be escaped compared to modern regex. By using the `-E` flag, that tells grep to use **Extended Regular Expressions (ERE)**. This is more aligned with modern regex that we're used to.
+
+Finally, I want to tell grep to ignore binary files. Since these are non-textual files, anything in there that matches my pattern would just be due to pure coincidence, and not an actual email. I can use `--binary-files=without-match` for this. This is what the whole command looks like when put together:
+```
+grep -RE \
+> --binary-files=without-match \
+> "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" \
+> .
+```
+
+You could also do it this way: `grep -RE --binary-files=without-match "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" .`. It's a stylistic choice, so whichever you prefer. This is what the results look like:
+```
+./updat.cmd:	$to ="jamestanner2299@gmail.com"
+./updat.cmd:	$to ="jamestanner2299@gmail.com"
+./updat.cmd:	$headers = "From: Blessing <blessing@heaven.com>";
+./script.st:	$to ="jamestanner2299@gmail.com"
+./script.st:	$headers = "From: Blessing <blessing@heaven.com>";
+./update/pagesc.koo:	$to ="jamestanner2299@gmail.com"
+./update/pagesc.koo:	$to ="jamestanner2299@gmail.com"
+./update/pagesc.koo:	$headers = "From: Blessing <blessing@heaven.com>";
+./update/cleanup:	$to ="jamestanner2299@gmail.com"
+./update/cleanup:	$to ="jamestanner2299@gmail.com"
+./update/cleanup:	$headers = "From: Blessing <blessing@heaven.com>";
+./update/pagescir:	$to ="jamestanner2299@gmail.com"
+./update/pagescir:	$to ="jamestanner2299@gmail.com"
+./update/pagescir:	$headers = "From: Blessing <blessing@heaven.com>";
+./update/update:	$to ="jamestanner2299@gmail.com"
+./update/update:	$to ="jamestanner2299@gmail.com"
+./update/update:	$headers = "From: Blessing <blessing@heaven.com>";
+./update/viruscle.reg:	$to ="jamestanner2299@gmail.com"
+./update/viruscle.reg:	$to ="jamestanner2299@gmail.com"
+./update/viruscle.reg:	$headers = "From: Blessing <blessing@heaven.com>";
+./Validation/updat.cmd:	$to ="jamestanner2299@gmail.com"
+./Validation/updat.cmd:	$to ="jamestanner2299@gmail.com"
+./Validation/updat.cmd:	$headers = "From: Blessing <blessing@heaven.com>";
+./Validation/script.st:	$to ="jamestanner2299@gmail.com"
+./Validation/script.st:	$headers = "From: Blessing <blessing@heaven.com>";
+./Validation/update:	$to ="jamestanner2299@gmail.com"
+./Validation/update:	$to ="jamestanner2299@gmail.com"
+./Validation/update:	$headers = "From: Blessing <blessing@heaven.com>";
+./Validation/resubmit.php:$send = "m3npat@yandex.com";
+./Validation/resubmit.php:mail("m3npat@yandex.com",$bron,$message,$lagi);
+./Validation/submit.php:$send = "m3npat@yandex.com";
+./Validation/submit.php:mail("m3npat@yandex.com",$bron,$message,$lagi);
+./Scriptup/newscr.pt:	$to ="jamestanner2299@gmail.com"
+./Scriptup/newscr.pt:	$headers = "From: Blessing <blessing@heaven.com>";
+./Scriptup/updat.cmd:	$to ="jamestanner2299@gmail.com"
+./Scriptup/updat.cmd:	$to ="jamestanner2299@gmail.com"
+./Scriptup/updat.cmd:	$headers = "From: Blessing <blessing@heaven.com>";
+./Scriptup/pagescir:	$to ="jamestanner2299@gmail.com"
+./Scriptup/pagescir:	$to ="jamestanner2299@gmail.com"
+./Scriptup/pagescir:	$headers = "From: Blessing <blessing@heaven.com>";
+./Scriptup/script.st:	$to ="jamestanner2299@gmail.com"
+./Scriptup/script.st:	$headers = "From: Blessing <blessing@heaven.com>";
+./Scriptup/update:	$to ="jamestanner2299@gmail.com"
+./Scriptup/update:	$to ="jamestanner2299@gmail.com"
+./Scriptup/update:	$headers = "From: Blessing <blessing@heaven.com>";
+./Scriptup/marvid:	$to ="jamestanner2299@gmail.com"
+./Scriptup/marvid:	$to ="jamestanner2299@gmail.com"
+./Scriptup/marvid:	$headers = "From: Blessing <blessing@heaven.com>";
+```
+
 
 ### Question 10 - The adversary used other email addresses in the obtained phishing kit. What is the email address that ends in "@gmail.com"?
 
