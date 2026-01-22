@@ -340,5 +340,8 @@ It does some other things, but these are the highlights. Especially the email se
 **Answer**: m3npat@yandex.com
 
 ### Question 10 - The adversary used other email addresses in the obtained phishing kit. What is the email address that ends in "@gmail.com"?
+Based on our lengthy analysis from the previous question, I think the answer is pretty obvious.
+
+**Answer**: m3npat@yandex.com
 
 ### Question 11 - What is the hidden flag?
