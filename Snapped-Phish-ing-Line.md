@@ -345,3 +345,12 @@ Based on our lengthy analysis from the previous question, I think the answer is 
 **Answer**: m3npat@yandex.com
 
 ### Question 11 - What is the hidden flag?
+This might have been the hardest question for me. I knew what flag I was looking for - they always start with THM, and this one follows this format it seems: `THM\{\S{4}_\S{4}_\S{3}_\S{3}\}`. My first thought is that it had to be in the phishing kit somewhere, but I found nothing.
+
+<img width="1202" height="37" alt="image" src="https://github.com/user-attachments/assets/2c98c6e4-47f7-44b4-b034-e893b407927a" />
+
+I even tried looking for any consecutive three, non-whitespace characters instead of `THM`, but nothing. I checked the filenames in every directory too but no dice. My next thought was to check the domain. I didn't really feel like going through every single sub domain myself so I tried to enumnerate them programatically. I used every tool I could think of: `subfinder` and `amass` for passive domain enumeration. `curl` for looking at Certificate Transparency (CT) logs to find TLS certs issued for subdomains. More brute-forcy tools for DNS enumeration like `dnsenum` and `dnsrecon`. None worked, and I couldn't install any on the machine that I was using. I supposed I could do it on another system I had control over, but I felt like that would defeat the purpose of this lab.
+
+The last thing I tried was searching the domain on VirusTotal. I have an enterprise account ( :P ), so I was hoping that would show me something. I searched through everything and nothing. I checked through the log.txt file hosted on the site but nothing there either. I looked through every accesible domain, including the **/data** path, nothing again. I even started digging through the inspection tool to find the answer. All the email sources? Sesarched that too.
+
+I decided to look at the hint which said that the flag would be in a `.txt` file and could be downloadable from the URL with some "adjustments". It also said to look through all of the subdomains which I already did. I honestly had no idea what to do at this point so admittedly I looked at what other people did. This obviously gave me the answer, but the one issue was that **no one** was able to give any explanation on how they knew to look for **flag.txt**, which is the hidden file containing the flag. They all just said: "search for 'flag.txt'". Okay, sure, but **how** do you know that? The hint didn't tell us the file name to search for.
