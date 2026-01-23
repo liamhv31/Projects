@@ -354,3 +354,11 @@ I even tried looking for any consecutive three, non-whitespace characters instea
 The last thing I tried was searching the domain on VirusTotal. I have an enterprise account ( :P ), so I was hoping that would show me something. I searched through everything and nothing. I checked through the log.txt file hosted on the site but nothing there either. I looked through every accesible domain, including the **/data** path, nothing again. I even started digging through the inspection tool to find the answer. All the email sources? Sesarched that too.
 
 I decided to look at the hint which said that the flag would be in a `.txt` file and could be downloadable from the URL with some "adjustments". It also said to look through all of the subdomains which I already did. I honestly had no idea what to do at this point so admittedly I looked at what other people did. This obviously gave me the answer, but the one issue was that **no one** was able to give any explanation on how they knew to look for **flag.txt**, which is the hidden file containing the flag. They all just said: "search for 'flag.txt'". Okay, sure, but **how** do you know that? The hint didn't tell us the file name to search for.
+
+The one person I saw who did this challenge that actually had some kind of explanation and thought process was Hank Hackerson's video [SOC Lvl 1 CTF Challenge / Snapped Phishing Line / TryHackMe SOC Level 1 Training](https://www.youtube.com/watch?v=ymHC__LARm8). He just tried a bunch of things like I did and got lucky by looking for **flag.txt** in the right subdomain. I still think there's a better way than just blind luck to figure this out, but I honestly wasn't able to find it.
+
+Anyway, the **flag.txt** file contains thw following secret: `fUxSVV8zSHRfaFQxd195NExwe01IVAo=`. Just based off of the `=` padding, I bet it's a base64 encoded string. Sure emough, it was, and throwing it into CyberChef gives us the flag we've been looking for! Well, kind of. It looks like it's in reverse almost: `}LRU_3Ht_hT1w_y4Lp{MHT`. After doing a bit of research, CyberChef has a way to reverse characters, so this is what the final recipe should look like:
+
+<img width="1538" height="896" alt="image" src="https://github.com/user-attachments/assets/24bacc80-d7d1-4dab-8e68-0c465ed38f99" />
+
+**Answer**: THM{pL4y_w1Th_tH3_URL}
