@@ -9,6 +9,8 @@ As a new security analyst, you have been tasked with reviewing one month of peri
 - WAF Logs: `ids_alerts.log`
 - VPN Logs: `vpn_auth.log`
 
+This lab allows us to use the command line for investigating raw log files, or a Splunk instance which will be much easier and simulate an actual SOC environment! In this lab however, I will show how to do it in both.
+
 ### Network Assets
 The Network of Initech Corp contains the following assets. We can use that as a reference.
 
