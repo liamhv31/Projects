@@ -53,6 +53,56 @@ index="network_logs" sourcetype=firewall_logs action=BLOCK
 | sort - block_count
 ```
 
-`stats count AS block_count by` says we want to count the following field and display those results in a column called `block_count`. `src_ip` is the field we're counting and it's going to be done for each unique value. Finally, we use `sort - block_count` to tell Splunk to sort our results using the `block_count` field in descending order (using the `-` character). the `|` operator is fundemantal here, as each line is treated as "do this, then this, then this." So, get results, then process, then process again, etc., until we get our desired results.
+- `stats count AS block_count by` says we want to count the following field and display those results in a column called `block_count`.
+- `src_ip` is the field we're counting and it's going to be done for each unique value.
+- Finally, we use `sort - block_count` to tell Splunk to sort our results using the `block_count` field in descending order (using the `-` character).
+- The `|` operator is fundemantal here, as each line is treated as "do this, then this, then this." So, get results, then process, then process again, etc., until we get our desired results.
 
 **Answer**: 203.0.113.45
+
+### Question 2 - In the firewall log, Which internal host was targeted by scans?
+#### Grep
+First, let's see what the strcuture of a firewall event is: `2025-08-25 00:47:46 ALLOW TCP 198.51.100.77:60317 -> 10.0.0.50:443`. We have the date, time, action, protocol, source IP, directional arrow, and destination IP. We're looking for inbound scanning from a malicious/suspicious IP to internal devices, which means our target IP (destination) will be on the right had side of the directional arrow. Splitting by whitespace, that's the seventh value. Now we can craft our `grep` command accordingly:
+```
+grep 'BLOCK' firewall.log | awk '{print $7}' | cut -d: -f1 | sort | uniq -c | sort -nr
+```
+The logs actually show us that there are two internal IPs targeted equally, the File/Finance Server and VPN Gateway. The answer they're looking for though is the File/Finance Server.
+
+<img width="123" height="78" alt="image" src="https://github.com/user-attachments/assets/3f862c31-3997-4962-ba8e-2f054688e77b" />
+
+#### Splunk
+The Splunk query is also essentially the exact same as it was in the previous question. Instead we'll just look at the **src_ip** field. You can even see that the percentage of each of the top two IPs being targeteed is the exact same.
+
+<img width="778" height="294" alt="image" src="https://github.com/user-attachments/assets/c63096dc-e61f-420a-8c3e-456c9da50cd4" />
+
+Then if we want to use a query to get the answer, it would look like this:
+```
+index="network_logs" sourcetype=firewall_logs action=BLOCK
+| stats count AS block_count by dst_ip
+| sort - block_count
+```
+
+<img width="1908" height="151" alt="image" src="https://github.com/user-attachments/assets/1acdc717-ea48-4797-b8d6-3b5b5c0ab25b" />
+
+**Answer**: 10.0.0.20
+
+### Question 3 - Which username was targeted in VPN logs?
+#### Grep
+Let's start again by looking at the VPN log format using the `head vpn_auth.log -n 100` command:
+```
+2025-09-13 07:59:18 203.0.113.100 bob SUCCESS assigned_ip=10.8.0.118
+2025-09-03 02:11:50 203.0.113.45 svc_backup FAIL
+```
+We can see there are two different event types: `SUCCESS` and `FAIL`. We want to find the most targeted users in the VPN logs so the `FAIL` events are our focus. This is what the command would look like:
+```
+grep 'FAIL' vpn_auth.log | awk '{print $4}' | sort | uniq -c | sort -nr
+```
+
+<img width="133" height="60" alt="image" src="https://github.com/user-attachments/assets/2beb71f7-05de-4007-9ccc-a0356e84b13e" />
+
+**Little fun fact**: Usernames starting with `svc` is a very commonly used naming convention in IT to identify service accounts!
+
+#### Splunk
+
+
+**Answer**: svc_backup
