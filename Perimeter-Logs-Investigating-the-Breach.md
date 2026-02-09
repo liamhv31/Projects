@@ -103,6 +103,19 @@ grep 'FAIL' vpn_auth.log | awk '{print $4}' | sort | uniq -c | sort -nr
 **Little fun fact**: Usernames starting with `svc` is a very commonly used naming convention in IT to identify service accounts!
 
 #### Splunk
+In Splunk, we still query against the **network_logs** **index**, but change the **sourcetype** to **vpn_logs**. Also instead of looking at the **action** field like we did with the **firewall_logs**, we need to look at the **result** field. Little side note, having data sources all map to different fields like what we see here can be quite inneficient for searching across vasts amounts of enterprise data. This is where something like a Unified Data Model (UDM) really shines. In a UDM structure, result and action from the VPN and firewall logs would just map to the same field. This is helpful, for example, if you want to search for failure events for a specific entity across disparate data sources. This is a topic for another time though.
 
+Back to our question, if we use this query, `index="network_logs" sourcetype="vpn_logs" result=FAIL`, we can look at the **username** field to find the same answer:
+
+<img width="784" height="264" alt="image" src="https://github.com/user-attachments/assets/fdf44043-dcfa-484b-aa42-9ea261ccd804" />
+
+Again, if we want to use a query instead:
+```
+index="network_logs" sourcetype="vpn_logs" result=FAIL
+| stats count AS fail_count by username
+| sort - fail_count
+```
+
+<img width="1910" height="108" alt="image" src="https://github.com/user-attachments/assets/1f8109d4-7905-4be6-b90b-7b2a77ff792b" />
 
 **Answer**: svc_backup
