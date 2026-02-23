@@ -119,3 +119,22 @@ index="network_logs" sourcetype="vpn_logs" result=FAIL
 <img width="1910" height="108" alt="image" src="https://github.com/user-attachments/assets/1f8109d4-7905-4be6-b90b-7b2a77ff792b" />
 
 **Answer**: svc_backup
+
+### Question 4 - What internal IP was assigned after successful VPN login?
+We need to find the IP assigned to the user for the first successful login after the failed attempts. We can simply do this with the command `grep 'svc_backup' vpn_auth.log`. We then just need to scroll top where there is the first successful authentication after the barage of failed attempts. We can also see the the source IP is the same for both the failed attempts and successful one.
+
+<img width="658" height="36" alt="image" src="https://github.com/user-attachments/assets/5ccc7817-a3df-4dd3-985f-db16b55f03af" />
+
+This could be easy to do given the size of the file, or very difficult. You can also simply look at which source IP is responsible for the majority of the failed attempts (I would say minimum 3-5 consecutive fails from the same IP before success), then use that to find the success events.
+```
+ubuntu@tryhackme:~/Desktop/Perimeter_logs/challenge$ grep 'FAIL' vpn_auth.log | awk '{print $3}' | sort | uniq -c | sort -nr
+    118 203.0.113.45
+    1 203.0.113.100
+    1 198.51.100.92
+    1 198.51.100.45
+```
+We see that most are from **203.0.113.45**. Now let's see the successful events that follow.
+
+<img width="668" height="151" alt="image" src="https://github.com/user-attachments/assets/0a27e64b-4493-4dc4-ab7c-b42e37d3b060" />
+
+So we can see that right after the many failed attempts from that IP against the **svc_backup** user, there was a success event where they were assigned an internal IP. If we wanted to be even more precise, and lean more towards building out an actual detection, we can create a classic **Multiple Failed Logon Attempts Followed by a Success** detection.
