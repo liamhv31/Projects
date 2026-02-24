@@ -121,6 +121,7 @@ index="network_logs" sourcetype="vpn_logs" result=FAIL
 **Answer**: svc_backup
 
 ### Question 4 - What internal IP was assigned after successful VPN login?
+#### grep
 We need to find the IP assigned to the user for the first successful login after the failed attempts. We can simply do this with the command `grep 'svc_backup' vpn_auth.log`. We then just need to scroll top where there is the first successful authentication after the barage of failed attempts. We can also see the the source IP is the same for both the failed attempts and successful one.
 
 <img width="658" height="36" alt="image" src="https://github.com/user-attachments/assets/5ccc7817-a3df-4dd3-985f-db16b55f03af" />
@@ -137,4 +138,80 @@ We see that most are from **203.0.113.45**. Now let's see the successful events 
 
 <img width="668" height="151" alt="image" src="https://github.com/user-attachments/assets/0a27e64b-4493-4dc4-ab7c-b42e37d3b060" />
 
-So we can see that right after the many failed attempts from that IP against the **svc_backup** user, there was a success event where they were assigned an internal IP. If we wanted to be even more precise, and lean more towards building out an actual detection, we can create a classic **Multiple Failed Logon Attempts Followed by a Success** detection.
+So we can see that right after the many failed attempts from that IP against the **svc_backup** user, there was a success event where they were assigned an internal IP. If we wanted to be even more precise, and lean more towards building out an actual detection, we can create a classic **Multiple Failed Logon Attempts Followed by a Success** detection. We'll do this in bash using the `awk` command. This is not ideal, and has it's **blind spots** as a detection, but in a real environment, you'll hopefully have a very capable enterprise SIEM.
+```
+awk '
+{
+  # Define which element in the log event is the IP and status
+  ip=$3
+  status=$5
+
+  if (status=="FAIL") {
+    # Consecutive FAIL streak only continues if same IP as previous line
+    if (ip==prev_ip) fail_streak++
+    else fail_streak=1
+
+    flagged = (fail_streak>=3) ? 1 : 0
+  }
+  else if (status=="SUCCESS") {
+    # Print only the first SUCCESS immediately after a 3+ FAIL streak
+    if (flagged && ip==prev_ip) {
+      print
+      flagged=0
+    }
+    # SUCCESS breaks the FAIL streak
+    fail_streak=0
+  }
+  else {
+    # Unknown status breaks streak
+    fail_streak=0
+    flagged=0
+  }
+
+  prev_ip=ip
+}
+' vpn_auth.log
+```
+This is how it works:
+1. This command is ran against each line sequentially in the log file
+2. First the variables are assigned (strongly relies on consistent event format)
+3. `prev_ip`, `fail_streak`, and `flagged`, persist between lines
+4. If we assume the first scanned line is a **SUCCESS** event, the `fail_streak` will remain zero
+5. Once the first **FAIL** event is reached, `fail_streak` will be set to 1, and that source IP will be assigned to `prev_ip`
+6. If the next event is also a **FAIL** from the same source IP, the `fail_streak` will be incremented by one, then that `ip` is set to `prev_ip`
+7. `flagged = (fail_streak>=3) ? 1 : 0` checks each iteration if the `fail_streak` is three or more
+8. This continues on and on. Let's assume that each subsequent event is a **FAIL** from the same source IP (you can start to see the crack in the logic), the `fail_streak` will rise above three and that will trigger the `flagged` variable to be set to one
+9. Once the next **SUCCESS** event is reached, assuming it's from the same source IP and it is immediately after the **FAIL** events, the script will print the event to the terminal
+10. `2025-09-03 02:19:40 203.0.113.45 svc_backup SUCCESS assigned_ip=10.8.0.23`
+
+#### Splunk
+In Splunk, we can do this with less lines of code and per each source IP.
+```
+index=network_logs sourcetype=vpn_logs
+| sort 0 _time
+| streamstats last(result) as prev_result by src_ip
+| streamstats count(eval(result="FAIL")) as fail_count by src_ip reset_on_change=true
+| where result="SUCCESS" AND fail_count>=3
+| table _time src_ip username assigned_ip fail_count
+```
+
+This is how it works:
+1. Searches **vpn_logs** in the **network_logs** index
+2. `sort 0 _time` sorts all events in chronological order
+3. `streamstats last(result) as prev_status by src_ip` creates the `prev_result` field which contains the status from the previous event for that same IP. This gives us event sequence per IP
+4. `streamstats count(eval(result="FAIL")) as fail_count by src_ip reset_on_change=true` is where most of the leg work happens
+   - `count(eval(result="FAIL"))` counts only events where the **result** is **FAIL**
+   - `as fail_count` creates a new column to track this value
+   - `by src_ip` does this for every IP
+   - `reset_on_change=true` resets the counter when the IP changes or the sequence of events breaks
+5. `where result="SUCCESS" AND fail_count>=3` is the condition for the detection to trigger. So the condition is a **SUCCESS** event with three or more **FAIL** events immediately before it
+6. `table _time src_ip username assigned_ip fail_count` formats the results into a table
+The final results will show us two hits since there are sequential **SUCCESS** events for the same IP after the **FAIL** events
+
+<img width="1904" height="92" alt="image" src="https://github.com/user-attachments/assets/8170f9b2-214b-49b3-b363-0f8fa93898b0" />
+
+You could implement deduplication logic in the rule or the playbook to fix this in a real environment, but that's outside the scope of this lab.
+
+**Answer**: 10.8.0.23
+
+### Question 5 - Which port was used for lateral SMB attempts?
