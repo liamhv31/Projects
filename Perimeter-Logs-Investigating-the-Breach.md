@@ -206,6 +206,7 @@ This is how it works:
    - `reset_on_change=true` resets the counter when the IP changes or the sequence of events breaks
 5. `where result="SUCCESS" AND fail_count>=3` is the condition for the detection to trigger. So the condition is a **SUCCESS** event with three or more **FAIL** events immediately before it
 6. `table _time src_ip username assigned_ip fail_count` formats the results into a table
+
 The final results will show us two hits since there are sequential **SUCCESS** events for the same IP after the **FAIL** events
 
 <img width="1904" height="92" alt="image" src="https://github.com/user-attachments/assets/8170f9b2-214b-49b3-b363-0f8fa93898b0" />
@@ -215,3 +216,6 @@ You could implement deduplication logic in the rule or the playbook to fix this 
 **Answer**: 10.8.0.23
 
 ### Question 5 - Which port was used for lateral SMB attempts?
+For lateral movement, we're going to want to look at the firewall logs since lateral movement is the action of accessing one internal system from another internal system over the network. Depending on the architecture of the internal network, there may not be a firewall in between these devices, but in this case there is. Typically for this type of activity for devices on the same network, you would rely on something like an Endpoint Detection and Response (EDR) tool to identify malicious or suspicious activity. It also depends on the types of devices involved: is the device being laterally moved to a Windows workstation or Linux server? This will slightly change how you detect this activity.
+
+I digress, the question asks for the port used for lateral SMB attempts. This hints at the targeted device being Windows since that's where SMB is primarily used. So we're looking for traffic from our threat actor's IP (10.8.0.23), to an internal host over either port 445 or 139 (TCP).
