@@ -38,7 +38,7 @@ This shows the following IPs and how many BLOCK actions were performed against e
 <img width="231" height="86" alt="image" src="https://github.com/user-attachments/assets/a93498c7-42e6-4c9e-a836-85884f558df3" />
 
 #### Splunk
-If you're within a corporate environment, you'll hopefully have something like Splunk to use instead. These logs can be found uner the "**Search & Reporting**" blade and the "**network_logs**" **index**
+If you're within a corporate environment, you'll hopefully have something like Splunk to use instead. These logs can be found under the "**Search & Reporting**" blade and the "**network_logs**" **index**
 
 <img width="1407" height="851" alt="image" src="https://github.com/user-attachments/assets/66d01be3-cc4d-4922-833e-02eefa3fe6cd" />
 
@@ -218,4 +218,63 @@ You could implement deduplication logic in the rule or the playbook to fix this 
 ### Question 5 - Which port was used for lateral SMB attempts?
 For lateral movement, we're going to want to look at the firewall logs since lateral movement is the action of accessing one internal system from another internal system over the network. Depending on the architecture of the internal network, there may not be a firewall in between these devices, but in this case there is. Typically for this type of activity for devices on the same network, you would rely on something like an Endpoint Detection and Response (EDR) tool to identify malicious or suspicious activity. It also depends on the types of devices involved: is the device being laterally moved to a Windows workstation or Linux server? This will slightly change how you detect this activity.
 
-I digress, the question asks for the port used for lateral SMB attempts. This hints at the targeted device being Windows since that's where SMB is primarily used. So we're looking for traffic from our threat actor's IP (10.8.0.23), to an internal host over either port 445 or 139 (TCP).
+I digress, the question asks for the port used for lateral SMB attempts. This hints at the targeted device being Windows since that's where SMB is primarily used. So we're looking for traffic from our threat actor's IP (10.8.0.23), to an internal host over either port 445 or 139 (TCP). This should be plenty to identify malicious activity. First, let's remind ourselves what the log structure is.
+```
+2025-08-25 00:47:46 ALLOW TCP 198.51.100.77:60317 -> 10.0.0.50:443
+```
+1. Date
+2. Time
+3. Result
+4. Protocol
+5. Source IP + port
+6. Direction (will always be west to east, but the source and destination IPs and ports will flip)
+7. Destination IP + port
+
+To find the traffic we want we'll use `awk` since it's slightly cleaner than the `grep` alternative and we want field-aware matching:
+```
+awk '$5 ~ /^10\.8\.0\.23:/ && $7 ~ /:(445|139)$/ {print}' firewall.log
+```
+1. `$5 ~` means that the fifth string needs to match the following regex
+2. `/^10\.8\.0\.23:/` is the malicious IP we're looking for. `^` asserts us at the start of the string. `\.` searches for an actual `.`. There's nothing after the `:` since we don't care which port is used here
+3. `&&` means both conditions must be true
+4. `$7 ~` means that the seventh string needs to match the following regex
+5. `/:(445|139)$/` are the possible SMB ports we're looking for. `:` at the beginning ensures we match the port number, not a specific IP octet. `|` means either port will match. `$` asserts us at the end of the string to ensure we match correctly
+6. `{print}` prints the lines that match to the terminal
+
+This is what we get:
+```
+2025-09-05 06:10:00 ALLOW TCP 10.8.0.23:2001 -> 10.0.0.51:445
+2025-09-05 07:00:00 ALLOW TCP 10.8.0.23:2006 -> 10.0.0.20:445
+2025-09-05 07:40:00 BLOCK TCP 10.8.0.23:2010 -> 10.0.0.60:445
+2025-09-05 08:40:00 BLOCK TCP 10.8.0.23:2016 -> 10.0.0.60:445
+2025-09-05 09:00:00 ALLOW TCP 10.8.0.23:2018 -> 10.0.0.20:445
+2025-09-05 09:20:00 ALLOW TCP 10.8.0.23:2020 -> 10.0.0.60:445
+2025-09-05 09:30:00 ALLOW TCP 10.8.0.23:2021 -> 10.0.0.51:445
+2025-09-05 10:30:00 ALLOW TCP 10.8.0.23:2027 -> 10.0.0.60:445
+2025-09-05 11:30:00 ALLOW TCP 10.8.0.23:2033 -> 10.0.0.20:445
+2025-09-05 11:50:00 ALLOW TCP 10.8.0.23:2035 -> 10.0.0.20:445
+2025-09-05 12:00:00 ALLOW TCP 10.8.0.23:2036 -> 10.0.0.60:445
+2025-09-05 13:20:00 BLOCK TCP 10.8.0.23:2044 -> 10.0.0.60:445
+2025-09-05 13:30:00 ALLOW TCP 10.8.0.23:2045 -> 10.0.0.60:445
+2025-09-05 13:50:00 ALLOW TCP 10.8.0.23:2047 -> 10.0.0.20:445
+2025-09-05 14:30:00 ALLOW TCP 10.8.0.23:2051 -> 10.0.0.60:445
+2025-09-05 14:40:00 BLOCK TCP 10.8.0.23:2052 -> 10.0.0.60:445
+2025-09-05 14:50:00 ALLOW TCP 10.8.0.23:2053 -> 10.0.0.20:445
+2025-09-05 15:00:00 BLOCK TCP 10.8.0.23:2054 -> 10.0.0.51:445
+2025-09-05 15:10:00 ALLOW TCP 10.8.0.23:2055 -> 10.0.0.20:445
+2025-09-05 15:50:00 ALLOW TCP 10.8.0.23:2059 -> 10.0.0.51:445
+2025-09-05 16:00:00 ALLOW TCP 10.8.0.23:2060 -> 10.0.0.20:445
+2025-09-05 16:10:00 BLOCK TCP 10.8.0.23:2061 -> 10.0.0.60:445
+2025-09-05 16:20:00 ALLOW TCP 10.8.0.23:2062 -> 10.0.0.20:445
+2025-09-05 16:40:00 BLOCK TCP 10.8.0.23:2064 -> 10.0.0.60:445
+2025-09-05 17:10:00 ALLOW TCP 10.8.0.23:2067 -> 10.0.0.60:445
+2025-09-05 18:00:00 BLOCK TCP 10.8.0.23:2072 -> 10.0.0.51:445
+2025-09-05 18:20:00 ALLOW TCP 10.8.0.23:2074 -> 10.0.0.20:445
+2025-09-05 18:30:00 ALLOW TCP 10.8.0.23:2075 -> 10.0.0.60:445
+2025-09-05 18:50:00 BLOCK TCP 10.8.0.23:2077 -> 10.0.0.51:445
+2025-09-05 19:40:00 ALLOW TCP 10.8.0.23:2082 -> 10.0.0.20:445
+2025-09-05 20:30:00 ALLOW TCP 10.8.0.23:2087 -> 10.0.0.51:445
+2025-09-05 20:50:00 BLOCK TCP 10.8.0.23:2089 -> 10.0.0.51:445
+```
+
+Looks like it's SMB over 445, which is the modern port for SMB traffic
