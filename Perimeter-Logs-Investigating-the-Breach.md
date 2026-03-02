@@ -216,6 +216,7 @@ You could implement deduplication logic in the rule or the playbook to fix this 
 **Answer**: 10.8.0.23
 
 ### Question 5 - Which port was used for lateral SMB attempts?
+#### grep
 For lateral movement, we're going to want to look at the firewall logs since lateral movement is the action of accessing one internal system from another internal system over the network. Depending on the architecture of the internal network, there may not be a firewall in between these devices, but in this case there is. Typically for this type of activity for devices on the same network, you would rely on something like an Endpoint Detection and Response (EDR) tool to identify malicious or suspicious activity. It also depends on the types of devices involved: is the device being laterally moved to a Windows workstation or Linux server? This will slightly change how you detect this activity.
 
 I digress, the question asks for the port used for lateral SMB attempts. This hints at the targeted device being Windows since that's where SMB is primarily used. So we're looking for traffic from our threat actor's IP (10.8.0.23), to an internal host over either port 445 or 139 (TCP). This should be plenty to identify malicious activity. First, let's remind ourselves what the log structure is.
@@ -277,4 +278,56 @@ This is what we get:
 2025-09-05 20:50:00 BLOCK TCP 10.8.0.23:2089 -> 10.0.0.51:445
 ```
 
-Looks like it's SMB over 445, which is the modern port for SMB traffic
+Looks like it's SMB over 445, which is the modern port for SMB traffic. Looks like our threat actor tried pivoting to every internal host except the DMZ web server.
+
+**Note**: Make sure the date of the logs you're loking for are dated after the compromise/breach time.
+
+#### Splunk
+In Splunk it's farily easy. After spcifying your index and sourcetype like usual, you want to set the `src_ip` to the threat actor internal IP and the `dst_port` should be either 445 pr 139. Make sure also set the the time range to **Since** the date and time of the compromise under the **Date Range** dropdown. Keep in mind that the date and time will likely be slightly later than in the original log files since it takes a little bit of time for the logs to get pushed/pulled to it.
+
+<img width="596" height="322" alt="image" src="https://github.com/user-attachments/assets/81e644d6-f1fe-40af-84ae-314b8e958c49" />
+
+`index="network_logs" sourcetype="firewall_logs" src_ip="10.8.0.23" (dst_port=445 OR dst_port=139)`
+
+Then if we click on the dst_port field in the field list we can see which port is used for SMB
+
+<img width="780" height="266" alt="image" src="https://github.com/user-attachments/assets/d14a3048-7b2a-46f8-a114-f7c9e1ef73d1" />
+
+**Answer**: 445
+
+### Question 6 - In the IDS logs, which host beaconed to the C2?
+#### grep
+Like before, we're not entirely sure what the structure of these events are (unless you've investigated these before), so we'll start by just doing a keyword search for C2: `grep "C2" ids_alerts.log`
+```
+2025-09-11 01:00:00 [**] [1:2001000:1] ET TROJAN Possible C2 Beaconing [**] [Classification: A network Trojan was detected] [Priority: 1] {TCP} 10.0.0.60:30000 -> 198.51.100.77:4444
+2025-09-11 07:00:00 [**] [1:2001001:1] ET TROJAN Possible C2 Beaconing [**] [Classification: A network Trojan was detected] [Priority: 1] {TCP} 10.0.0.60:30001 -> 198.51.100.77:4444
+2025-09-11 13:00:00 [**] [1:2001002:1] ET TROJAN Possible C2 Beaconing [**] [Classification: A network Trojan was detected] [Priority: 1] {TCP} 10.0.0.60:30002 -> 198.51.100.77:4444
+2025-09-11 19:00:00 [**] [1:2001003:1] ET TROJAN Possible C2 Beaconing [**] [Classification: A network Trojan was detected] [Priority: 1] {TCP} 10.0.0.60:30003 -> 198.51.100.77:4444
+2025-09-12 01:00:00 [**] [1:2001004:1] ET TROJAN Possible C2 Beaconing [**] [Classification: A network Trojan was detected] [Priority: 1] {TCP} 10.0.0.60:30004 -> 198.51.100.77:4444
+2025-09-12 07:00:00 [**] [1:2001005:1] ET TROJAN Possible C2 Beaconing [**] [Classification: A network Trojan was detected] [Priority: 1] {TCP} 10.0.0.60:30005 -> 198.51.100.77:4444
+2025-09-12 13:00:00 [**] [1:2001006:1] ET TROJAN Possible C2 Beaconing [**] [Classification: A network Trojan was detected] [Priority: 1] {TCP} 10.0.0.60:30006 -> 198.51.100.77:4444
+2025-09-12 19:00:00 [**] [1:2001007:1] ET TROJAN Possible C2 Beaconing [**] [Classification: A network Trojan was detected] [Priority: 1] {TCP} 10.0.0.60:30007 -> 198.51.100.77:4444
+```
+This is a sample of what is returned, so there are alerts for **Possible C2 Beaconing**. We can see that the source IP is position 20 (if seperating by whitespace) for this particular event type. If we return only the IP part and deduplicate we can see the beaconing internal IP. Using our network asset documentation, we can see that this IP belongs to the host **WORKSTATION-60**, which is a **Windows 10**, **employee workstation** that belongs to the **Sales** team with a **Medium** business criticality.
+```
+grep "C2" ids_alerts.log | awk '{print $20}' | cut -d':' -f1 | uniq
+```
+
+#### Splunk
+In Splunk, the `sourcetype` is going to be `ids_logs`. In a SIEM, logs _should_ be parsed in a meaningful way. For our sake, they are. Searching through unknown logs in Splunk can start by looking through the listed fields. We check each one get an idea of what is mapped to it for a particular logs source. For example, we can see a `classification` field.
+
+<img width="782" height="332" alt="image" src="https://github.com/user-attachments/assets/d3c3de93-d73b-4643-a25c-bb4b24917d07" />
+
+While useful, this isn't exactly what we are looking for, though we can see the **A network Trojab was detected** event type that was related to our C2 beaconing activity. There's also the `alert` field which does show our C2 activity.
+
+<img width="782" height="440" alt="image" src="https://github.com/user-attachments/assets/8e67e33d-8811-492f-9378-7d4e3938d841" />
+
+Now we can **pivot** off of that alert type by selecting the value and adding it to our query. 
+```
+index="network_logs" sourcetype="ids_logs" alert="ET TROJAN Possible C2 Beaconing"
+```
+From there, you can either do something similar to what we did before and return only the unique values we're looking for, or more simply and lazily (especially since there's just one IP), we just look at the `src_ip` value in the field list since there is only one beaconing IP. 
+
+<img width="786" height="222" alt="image" src="https://github.com/user-attachments/assets/c2b8cd4e-319e-441e-8d70-c6a0874e7823" />
+
+**Answer**: 10.0.0.60
