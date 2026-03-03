@@ -331,3 +331,36 @@ From there, you can either do something similar to what we did before and return
 <img width="786" height="222" alt="image" src="https://github.com/user-attachments/assets/c2b8cd4e-319e-441e-8d70-c6a0874e7823" />
 
 **Answer**: 10.0.0.60
+
+### Question 7 - During the investigation, which IP was observed to be associated with C2?
+#### grep
+We don't really need to do any additional work here. We can just look at the IDS alerts we saw in the previous investigation:
+```
+2025-09-12 19:00:00 [**] [1:2001007:1] ET TROJAN Possible C2 Beaconing [**] [Classification: A network Trojan was detected] [Priority: 1] {TCP} 10.0.0.60:30007 -> 198.51.100.77:4444
+```
+You can see the C2 server IP at the very end.
+
+#### Splunk
+Not working at the time of this lab.
+
+**Answer**: 198.51.100.77
+
+### Question 8 - Which host showed the exfiltration attempts?
+#### grep
+My first thought is to check if the IDS logs has any exfiltration alerts by just `grep`'ing for that word: `grep "Exfiltration" ids_alerts.log `. Looks like there are many!
+```
+2025-09-27 03:00:00 [**] [1:2002049:1] ET INFO Possible HTTP POST Large Upload [**] [Classification: Potential Data Exfiltration] [Priority: 2] {TCP} 10.0.0.51:40049 -> 198.51.100.77:8080
+2025-09-27 07:00:00 [**] [1:2002050:1] ET INFO Possible HTTP POST Large Upload [**] [Classification: Potential Data Exfiltration] [Priority: 2] {TCP} 10.0.0.51:40050 -> 198.51.100.77:8080
+2025-09-27 11:00:00 [**] [1:2002051:1] ET INFO Possible HTTP POST Large Upload [**] [Classification: Potential Data Exfiltration] [Priority: 2] {TCP} 10.0.0.51:40051 -> 198.51.100.77:8080
+2025-09-27 15:00:00 [**] [1:2002052:1] ET INFO Possible HTTP POST Large Upload [**] [Classification: Potential Data Exfiltration] [Priority: 2] {TCP} 10.0.0.51:40052 -> 198.51.100.77:8080
+2025-09-27 19:00:00 [**] [1:2002053:1] ET INFO Possible HTTP POST Large Upload [**] [Classification: Potential Data Exfiltration] [Priority: 2] {TCP} 10.0.0.51:40053 -> 198.51.100.77:80
+2025-09-27 23:00:00 [**] [1:2002054:1] ET INFO Possible HTTP POST Large Upload [**] [Classification: Potential Data Exfiltration] [Priority: 2] {TCP} 10.0.0.51:40054 -> 198.51.100.77:8080
+2025-09-28 03:00:00 [**] [1:2002055:1] ET INFO Possible HTTP POST Large Upload [**] [Classification: Potential Data Exfiltration] [Priority: 2] {TCP} 10.0.0.51:40055 -> 198.51.100.77:8080
+2025-09-28 07:00:00 [**] [1:2002056:1] ET INFO Possible HTTP POST Large Upload [**] [Classification: Potential Data Exfiltration] [Priority: 2] {TCP} 10.0.0.51:40056 -> 198.51.100.77:80
+```
+We can see that the exfiltration attempts are coming from 10.0.0.51 (hostname APP-WEB-01), which is our internal web app. This confirms a significant compromise across our network.
+
+#### Splunk
+Not working at the time of this lab.
+
+**Answer**: 10.0.0.51
