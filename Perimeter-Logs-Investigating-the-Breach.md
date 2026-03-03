@@ -1,4 +1,4 @@
-## Perimeter Logs: Investigting the Breach
+## Perimeter Logs: Investigating the Breach
 
 ### Overview
 Initech Corp, a mid-sized financial services company, has recently deployed a new firewall and intrusion detection system (IDS) to monitor its network perimeter. Over the past month, security analysts have noticed abnormal traffic patterns, but the SOC team has been overwhelmed and missed deeper analysis.
@@ -56,13 +56,13 @@ index="network_logs" sourcetype=firewall_logs action=BLOCK
 - `stats count AS block_count by` says we want to count the following field and display those results in a column called `block_count`.
 - `src_ip` is the field we're counting and it's going to be done for each unique value.
 - Finally, we use `sort - block_count` to tell Splunk to sort our results using the `block_count` field in descending order (using the `-` character).
-- The `|` operator is fundemantal here, as each line is treated as "do this, then this, then this." So, get results, then process, then process again, etc., until we get our desired results.
+- The `|` operator is fundamental here, as each line is treated as "do this, then this, then this." So, get results, then process, then process again, etc., until we get our desired results.
 
 **Answer**: 203.0.113.45
 
 ### Question 2 - In the firewall log, Which internal host was targeted by scans?
 #### Grep
-First, let's see what the strcuture of a firewall event is: `2025-08-25 00:47:46 ALLOW TCP 198.51.100.77:60317 -> 10.0.0.50:443`. We have the date, time, action, protocol, source IP, directional arrow, and destination IP. We're looking for inbound scanning from a malicious/suspicious IP to internal devices, which means our target IP (destination) will be on the right had side of the directional arrow. Splitting by whitespace, that's the seventh value. Now we can craft our `grep` command accordingly:
+First, let's see what the structure of a firewall event is: `2025-08-25 00:47:46 ALLOW TCP 198.51.100.77:60317 -> 10.0.0.50:443`. We have the date, time, action, protocol, source IP, direction arrow, and destination IP. We're looking for inbound scanning from a malicious/suspicious IP to internal devices, which means our target IP (destination) will be on the right had side of the direction arrow. Splitting by whitespace, that's the seventh value. Now we can craft our `grep` command accordingly:
 ```
 grep 'BLOCK' firewall.log | awk '{print $7}' | cut -d: -f1 | sort | uniq -c | sort -nr
 ```
