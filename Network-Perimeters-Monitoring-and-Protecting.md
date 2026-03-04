@@ -8,22 +8,22 @@ You can use `grep` to find only the blocked firewall events. This will show you 
 
 <img width="749" height="322" alt="image" src="https://github.com/user-attachments/assets/3f628ccb-2818-43e5-ab65-144cc92f2c5d" />
 
-This works well enough for this exercise, but in a much larger log file, there will likely be 10s of thousands of lines to look through at least. A cleaner way to do this is with the following `grep` query:
+This works well enough for this exercise, but in a much larger log file, there will likely be tens of thousands of lines to look through at least. A cleaner way to do this is with the following `grep` query:
 ```
 grep 'BLOCK' firewall_logs.txt | awk '{print $5}' | cut -d: -f1 | sort | uniq -c | sort -nr
 ```
 Let's break it down:
 - `grep 'BLOCK' firewall_logs.txt` gets us only the BLOCKED firewall events
-- `awk '{print $5}'` sepeartes each string on a line by whitespace by default. Since this is a structured log, the IP and port number will always be at the 5th index (or 4th for you prgrammers)
-- `cut -d: -f1` strips the colon and port number away, leaving only the IP. the `-d` flag tells `cut` where to split the string (the colon is the delimiter), meaning the IP is field one and the port is field two. The `-f1` flag tells vut to return field one (the IP)
-- `sort | uniq -c` counts occurences per grouped (unique) IP
+- `awk '{print $5}'` separates each string on a line by whitespace by default. Since this is a structured log, the IP and port number will always be in the 5th field (or 4th for you programmers)
+- `cut -d: -f1` strips the colon and port number away, leaving only the IP. The `-d` flag tells `cut` where to split the string (the colon is the delimiter), meaning the IP is field one and the port is field two. The `-f1` flag tells cut to return field one (the IP)
+- `sort | uniq -c` counts occurrences per unique IP
 - `sort -nr` orders the list in descending order based on the count of each IP
 
 There may be even better ways to do this, but this way is a good start. Ideally, you have a SIEM you can use to query all of your logs with ease!
 
 **Answer**: 203.0.113.10
 
-### Question 2 - In the WAF Logs, which single source IP is responsible for all the blocked web attacks?
+### Question 2 - In the WAF logs, which single source IP is responsible for all the blocked web attacks?
 We can apply the same logic as we did in question 1 with some slight alterations based on the WAF log format.
 ```
 timestamp=2025-09-22T09:14:10Z src_ip=198.51.100.12 action=BLOCK request="GET /products.php?id=12%20UNION%20SELECT%20user,pass%20FROM%20users" rule_id=942100 attack_type="SQL Injection"
@@ -50,12 +50,12 @@ We can use grep again to count only the FAILED_AUTH events: `grep -c 'FAILED_AUT
 
 <img width="749" height="36" alt="image" src="https://github.com/user-attachments/assets/27c352ed-027a-47f1-ab10-5b2d1ca7e652" />
 
-If you wanted to be a bit more technical about this attack classification, based on MITRE techniques and what we see in the VPN logs, this would be a Brute Force via Password Spraying (T1110.003) attack. This is because the brute force is spread across multiple different users
+If you wanted to be a bit more technical about this attack classification, based on MITRE techniques and what we see in the VPN logs, this would be a Brute Force via Password Spraying (T1110.003) attack. This is because the brute force is spread across multiple different user accounts.
 
 **Answer**: 90
 
 ### Question 4 - Which suspicious IP address was found attempting the brute-force attack against the VPN gateway?
-Same `grep` logic as the previous questions: `grep 'FAILED_AUTH' vpn_logs.txt | awk '{print $5}' | cut -d: -f1 | sort | uniq -c | sort -nr`
+Using the same `grep` logic as the previous questions: `grep 'FAILED_AUTH' vpn_logs.txt | awk '{print $5}' | cut -d: -f1 | sort | uniq -c | sort -nr`
 
 <img width="1268" height="34" alt="image" src="https://github.com/user-attachments/assets/be0e9efe-eda0-4757-80f2-7058ab2d293f" />
 
