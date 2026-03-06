@@ -43,6 +43,7 @@ We're looking for internal scanning, which means both the source and destination
 
 ### Question 2 - How many log entries are present for the internal IP performing internal scanning activity?
 
+
 ## Horizontal vs Vertical Scanning
 
 ## The Mechanics of Scanning
