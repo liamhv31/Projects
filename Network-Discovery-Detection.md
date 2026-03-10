@@ -42,7 +42,38 @@ We're looking for internal scanning, which means both the source and destination
 **Answer**: log-session-2.csv
 
 ### Question 2 - How many log entries are present for the internal IP performing internal scanning activity?
+There are a few different ways you can achieve this using `grep`, `awk`, `cut`, etc. I use `awk`.
+```
+awk -F'"' 'NR>1 {print $4}' log-session-2.csv | wc -l
+```
+- `-F'"'` splits lines into fields using quotes as the delimiter
+- `NR>1` skips the first row which is the header
+- `{print $4}` returns the source IP on this case (`source.ip`). Because we are using quotes as the delimiter, the fields will look like this:
+  - `$1` is empty because our line starts with a quote
+  - `$2` is `@timestamp`
+  - `$3` is `,`
+  - `$4` is the `source.ip`
+- `log-sessions-2.csv` is our log file
+- `| wc -l` counts the number of lines returned
+ 
+There are likely cleaner ways to do this, but this works. This returns 2276 events, which is "correct" as far as the accepted answer to the question goes, but in reality this is wrong. I modified the command to only return events where the `source.ip` and `destination.ip` were both private IPs to confirm all were actually internal-to-internal scanning and this returned 2020 events.
+```
+awk -F'"' 'NR>1 && $4 ~ /^(10\.|172\.16\.|192\.168\.)/ && $6 ~ /^(10\.|172\.16\.|192\.168\.)/ {print $4}' log-session-2.csv | wc -l
+```
+This is because there are many events where an internal IP is making ICMP requests to an external IP.
+```
+"Sep 7, 2025 @ 17:09:05.440","192.168.230.127",8,"203.0.113.2",0,"-","-","-","-","{""ts"":1757264945.440747,""uid"":""CbVQdA2SKCdRkGMIvg"",""id.orig_h"":""192.168.230.127"",""id.orig_p"":8,""id.resp_h"":""203.0.113.2"",""id.resp_p"":0,""proto"":""icmp"",""duration"":2.3759799003601074,""orig_bytes"":224,""resp_bytes"":0,""conn_state"":""OTH"",""local_orig"":true,""local_resp"":true,""missed_bytes"":0,""orig_pkts"":4,""orig_ip_bytes"":336,""resp_pkts"":0,""resp_ip_bytes"":0,""community_id"":""1:cxLZTyBY3XbE62SdWoAZw0AlApg="",""orig_mac_oui"":""VMware, Inc.""}","zeek.conn"
+```
+So it appears that whoever designed this lab made a mistake, either by accidentally including events in this log file that weren't internal-to-internal scans, or by incorrectly setting the correct answer. If this file was meant to only contain internal-to-internal scanning and was pulled from a SIEM, that would mean that either the query the person used to pull these events from the SIEM were flawed, or there is a mapping/parser problem with the SIEM (e.g., an event type specifically for internal-to-internal scanning). If the latter, this is where you would submit this finding to the team responsible for log management to have them fix it (in a real-world, enterprise environment).
 
+**Answer**: 2276
+
+### Question 3 - What is the external IP address that is performing external scanning activity?
+Since **log-session-2.csv** contains (mostly) internal-to-internal scanning activity, and **log-session-0.csv** and **log-session-1.csv** are the same, we can just review the sanitized data. This shows just one IP with 2014 different connection attempts targeting the same internal IP (except one attempt) over hundreds of different ports. These events appear to all be milliseconds apart. All of these observations are highly indicative of automated scanning.
+
+<img width="728" height="58" alt="image" src="https://github.com/user-attachments/assets/edf52ced-0f88-4933-aabf-22a0d37dc655" />
+
+**Answer**: 203.0.113.25
 
 ## Horizontal vs Vertical Scanning
 
