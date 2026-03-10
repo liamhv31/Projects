@@ -77,4 +77,52 @@ Since **log-session-2.csv** contains (mostly) internal-to-internal scanning acti
 
 ## Horizontal vs Vertical Scanning
 
+### Question 1 - One of the log files contains evidence of a horizontal scan. Which IP range was scanned? Format X.X.X.X/X
+We need to identify a single IP range being scanned across multiple ports. Let's start with **log-session-0.csv**. Counting the number of unique IPs shows us that there is only a couple IPs in this log file.
+```
+2013 192.168.230.145
+1 239.255.255.250
+```
+This could mean that this file contains vertical scanning activity, but not horizontal. Since **log-session-1.csv** is the same, we can skip to **log-session-2.csv**. We can see in this log file that there is a large number of unique IPs. Scrolling through the output, we can see very clearly that there is a single IP range showing up. It appears that the entire 203.0.113.0/24 subnet is being scanned.
+```
+1 203.0.113.254
+1 203.0.113.253
+1 203.0.113.252
+1 203.0.113.251
+1 203.0.113.250
+1 203.0.113.249
+1 203.0.113.248
+1 203.0.113.247
+1 203.0.113.246
+1 203.0.113.245
+1 203.0.113.244
+1 203.0.113.243
+...
+```
+It doesn't tell us what the subnet is though, so how do you find that out? The subnet number tells us how many bits of an IP address reprersent the network portion. Whatever is remaining belongs to the host. For `203.0.113.0/24`, the binary representation would look like this: `11111111.11111111.11111111.00000000`. So the first three octets of the IP rnage represent the network. The part for the host can range from 0-255 (203.0.113.0 - 203.0.113.255). How do we know it's `/24` though? We just count the number of bits for the part of the IP rangenthat is always the same. In the logs, the first three octets are always `203.0.113`. That's `8 x 3 = 24`. Since the entire last octet is available for the host, we would represent the range starting at the first available number for the fourth octet, which is `0`.
+
+**Answer**: 203.0.113.0/24
+
+### Question 2 - In the same log file, there is one IP address on which a vertical scan is performed. Which IP address is this?
+In the same output for question 1, we can see that IP `192.168.230.145` shows up 2007 times. Let's see what the activity looks like.
+```
+...
+1 ,3030,
+1 ,33354,
+1 ,524,
+1 ,1717,
+1 ,1007,
+1 ,7106,
+1 ,3031,
+1 ,2301,
+1 ,9898,
+1 ,999,
+...
+```
+The way I printed the data is a bit crude but it still tells us what we need to know - this IP is being scanned across thousands of different ports. This is a clear sign of vertical scanning.
+
+**Answer**: 192.168.230.145
+
+### Question 3 - On one of the IP addresses, only a few ports are scanned which host common services. Which are the ports that are scanned on this IP address? Format: port1, port2, port3 in ascending order.
+
 ## The Mechanics of Scanning
