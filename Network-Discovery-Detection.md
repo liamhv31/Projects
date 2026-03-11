@@ -124,5 +124,31 @@ The way I printed the data is a bit crude but it still tells us what we need to 
 **Answer**: 192.168.230.145
 
 ### Question 3 - On one of the IP addresses, only a few ports are scanned which host common services. Which are the ports that are scanned on this IP address? Format: port1, port2, port3 in ascending order.
+We need to identify which log file contains an IP scanned only a few times. **log-session-0.csv** only has one other IP with one connection attempt.
+```
+2013 192.168.230.145
+1 239.255.255.250
+```
+Again, this means **log-session-1.csv** will be the same, so our answer is in the final log file. This is the file that had the horizontal scanning, so we can ignore that entire IP range from before
+```
+>$ awk -F'"' 'NR>1 && $6 !~ /^(203\.0\.113)/ {print $6}' log-session-2.csv | sort | uniq -c
+
+2 -
+7 192.168.230.1
+2013 192.168.230.145
+1 239.255.255.250
+```
+We can also ignore `192.168.230.145` since there are thousands of events for it. Conversely, `239.255.255.250` only has one event so it's likely not that one either. `192.168.230.1` only has a few connection events so let's take a look at what the unique ports are.
+```
+>$ awk -F'"' 'NR>1 && $6 ~ /^(192\.168\.230\.1)$/ {print $7}' log-session-2.csv | sort| uniq -c
+
+2 ,0,
+2 ,3389,
+2 ,445,
+1 ,80,
+```
+Three ports here stand out: `3389`, `445`, and `80`. These ports are **RDP**, **SMB**, and **HTTP** respectively. These are definitely common services!
+
+**Answer**: 80, 445, 3389
 
 ## The Mechanics of Scanning
