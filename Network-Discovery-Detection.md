@@ -227,3 +227,13 @@ You can see on the line where I added `<----LOOK HERE`, that there is the same c
 
 <Insert image>
 
+One of the most common types of scans is **TCP SYN**. This is also considered a stealthy scanning technique since the scan often blends in with legitimate network traffic making it harder to detect.
+
+**Answer**: TCP SYN Scan
+
+### Question 3 - Is there any UDP scanning attempt in the logs? Y/N
+This is a very easy answer, since we can just click on the `network.protocol` field to see if there are any UDP events.
+
+<Insert image>
+
+**Answer**: N
