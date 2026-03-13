@@ -196,3 +196,6 @@ We can see that the `destination.ip` has a pattern of IPs that look like they be
 I would show a better way to do this is by creating a **Lens** visualization, but it looks like this instance doesn't haven't it configured correctly.
 
 **Answer**: 192.168.230.127
+
+### Question 2 - The zeek.conn.conn_state value shows the connection state. Using the information provided by this value, identify the type of scan being performed by 203.0.113.25 against 192.168.230.145
+If we click on the `zeek.conn.conn_state` field, we can see that there is only one connection state which is `S0`.
