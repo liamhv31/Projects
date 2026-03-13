@@ -199,3 +199,31 @@ I would show a better way to do this is by creating a **Lens** visualization, bu
 
 ### Question 2 - The zeek.conn.conn_state value shows the connection state. Using the information provided by this value, identify the type of scan being performed by 203.0.113.25 against 192.168.230.145
 If we click on the `zeek.conn.conn_state` field, we can see that there is only one connection state which is `S0`.
+
+<Insert image>
+  
+This indicates that a connection attempt was made, but there was no response from the destination. I was looking at the different `conn_state` values in the **[base/protocols/conn/main.zeek](https://docs.zeek.org/en/current/scripts/base/protocols/conn/main.zeek.html#field-Conn::Info$conn_state)** documentation, but it didn't really indicate what the type of scanning activity could be.
+
+<Insert image>
+
+Some more Googling brought be to the official Zeek GitHub repository, specifically **[zeek/scripts/base/protocols/conn/main.zeek](https://github.com/zeek/zeek/blob/master/scripts/base/protocols/conn/main.zeek)**. Doing a Ctrl + F brought me to this code snippet
+```
+...
+else if ( rs == TCP_CLOSED && os == TCP_CLOSED )
+  return "SF";
+else if ( os == TCP_CLOSED )
+  return r_inactive ? "SH" : "S2";
+else if ( rs == TCP_CLOSED )
+  return o_inactive ? "SHR" : "S3";
+else if ( os == TCP_SYN_SENT && rs == TCP_INACTIVE )
+  return "S0";                                             <----LOOK HERE
+else if ( os == TCP_ESTABLISHED && rs == TCP_ESTABLISHED )
+  return "S1";
+else
+  return "OTH";
+...
+```
+You can see on the line where I added `<----LOOK HERE`, that there is the same conn_state value. The condition for it to be returned looks to be related tp **TCP SYN**. If we look back at our logs in Elastic, we can actually see that the `network.protocol` value is also `tcp`.
+
+<Insert image>
+
