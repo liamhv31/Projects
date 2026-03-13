@@ -152,3 +152,47 @@ Three ports here stand out: `3389`, `445`, and `80`. These ports are **RDP**, **
 **Answer**: 80, 445, 3389
 
 ## The Mechanics of Scanning
+In this part of the lab, we will use Elastic (a.k.a the ELK stack), to answer the questions below. Elastic Stack is an open-source platform used for centralized logging, data analysis, and visualization. While it is not a SIEM, you can configure it to act like one.
+
+Searching for logs in Elastic is done within the **Analytics** &rarr; **Discover** page.
+
+<img width="218" height="703" alt="image" src="https://github.com/user-attachments/assets/d3e9d047-292a-426e-8033-162ccf2901a9" />
+
+Data is typically (and should be) seperated in different **Data views** of **indexes**. For this lab, our data is under the **All logs** index.
+
+<img width="363" height="380" alt="image" src="https://github.com/user-attachments/assets/9debf17c-0707-4527-8593-b342495c55da" />
+
+We also want to search the entire time range.
+
+<img width="1112" height="703" alt="image" src="https://github.com/user-attachments/assets/c03cee12-f243-450c-9ab0-ee27fedc3c21" />
+
+Data!
+
+<img width="1917" height="707" alt="image" src="https://github.com/user-attachments/assets/57558fb4-a755-4296-bad3-fc7f86d7b8fb" />
+
+### Question 1 - Which source IP performs a ping sweep attack across a whole subnet?
+A ping sweep is an ICMP based scanning technique, which is one of the most basic types of scanning. I use **Kibana Query Language (KQL)**, but it looks like there is also a new piped language structure called **[ES|QL](https://www.elastic.co/docs/reference/query-languages/esql)**, which almost looks like a child between **Splunk Query Language (SPL)** and **Structured Query Language (SQL)** at first glance.
+
+I digress, in order to find our answer we need to identify ICMP traffic. Looking at the field options, `network.protocol` looks like a safe bet: `network.protocol: icmp`. This gives us 256 **documents** (which is like a record or event in Elastic speak, represented as JSON).
+
+<img width="1914" height="703" alt="image" src="https://github.com/user-attachments/assets/fd231cbe-616c-4594-a62d-7a52a3fbe5b8" />
+
+We should also add the `source.ip` and `destination.ip` fields as columns in the output. You can do this by clicking the :heavy_plus_sign: icon beside the field in the field list.
+
+<img width="627" height="697" alt="image" src="https://github.com/user-attachments/assets/d34b659b-eca3-4a1b-82bd-b08cd5aa1c11" />
+
+You can also drag and drop columns to re-arrange them in an order you find best.
+
+<img width="1633" height="418" alt="image" src="https://github.com/user-attachments/assets/bfdd7b5e-2b2b-4c9c-828b-2721a94ae568" />
+
+Now you can't create an aggregation output of unique values in the **Discover** tab, but you can click on the fields on the field list like in Splunk to see the top values. We can see that there is only one source IP making ICMP requests.
+
+<img width="490" height="267" alt="image" src="https://github.com/user-attachments/assets/34852f37-328e-40d9-9938-f7fb30f510ec" />
+
+We can see that the `destination.ip` has a pattern of IPs that look like they belong in the same subnet. In fact, this looks like the same data in the previous parts of this lab where we identified the `203.0.113.0/24` subnet.
+
+<img width="503" height="566" alt="image" src="https://github.com/user-attachments/assets/c6ce33c9-5682-435d-a59f-59b7afd6c1b8" />
+
+I would show a better way to do this is by creating a **Lens** visualization, but it looks like this instance doesn't haven't it configured correctly.
+
+**Answer**: 192.168.230.127
