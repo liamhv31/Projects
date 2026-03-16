@@ -1,7 +1,7 @@
 ## External vs Internal Scanning
 
 ### Question 1 - Which file contains logs that showcase internal scanning activity?
-In this lab, we have three files that have been exported from a SIEM solution. One of the files contain sanitized logs while the others are raw. We need to identify which of them contains the internal scanning activity. Let's start by looking at a sample of each.
+In this lab, we have three files that have been exported from a SIEM solution. One of the files contains sanitized logs, while the other two contain raw logs. We need to identify which of them contains the internal scanning activity. Let's start by looking at a sample of each.
 
 **log-session-0.csv**:
 ```
@@ -35,28 +35,33 @@ In this lab, we have three files that have been exported from a SIEM solution. O
 "Sep 7, 2025 @ 17:14:58.054","192.168.230.127",52424,"192.168.230.1",445,"-","-","-","-","{""ts"":1757265298.054489,""uid"":""CXyDkj2aEkFezjHlO8"",""id.orig_h"":""192.168.230.127"",""id.orig_p"":52424,""id.resp_h"":""192.168.230.1"",""id.resp_p"":445,""proto"":""tcp"",""conn_state"":""S0"",""local_orig"":true,""local_resp"":true,""missed_bytes"":0,""history"":""S"",""orig_pkts"":1,""orig_ip_bytes"":44,""resp_pkts"":0,""resp_ip_bytes"":0,""community_id"":""1:V8ZRxQVqxE6DPQOc6QUg0gQh+r8="",""orig_mac_oui"":""VMware, Inc.""}","zeek.conn"
 ```
 
-We can see that ****log-session-0.csv** contains the sanitized logs while the other two files contain the raw **Zeek** logs. You can tell because we can see all of the Zeek **conn.log** fields in the other log files, whereas in the sanitized file it's only the important data summarized. Just compare events one from both **log-session-0.csv** and **log-session-1.csv**. They are the same. Zeek conn.log events are great to identify scanning because they show us every connection attempt (TCP, UDP, ICMP).
+We can see that ****log-session-0.csv** contains the sanitized logs while the other two files contain the raw **Zeek** logs. You can tell because we can see all of the Zeek **conn.log** fields in the other log files, whereas in the sanitized file it's only the important data summarized. You can confirm this by comparing a single event from **log-session-0.csv** and **log-session-1.csv**. These entries are identical. Zeek conn.log events are particularly useful for identifying scanning activity because they capture every connection attempt (TCP, UDP, and ICMP).
 
-We're looking for internal scanning, which means both the source and destination IPs will be private IPs. If we look at the sample events from **log-session-0.csv**, the source IP (`203.0.113.25`) is public (private IP ranges include 10.0.0.0/8, 172.16.0.0/12, and 192.168.0.0/16). This automatically eliminates **log-session-1.csv** because the events are the same, just the raw version. In **log-session-2.csv**, we can see that both the source and destination IPs are part of the 192.168.0.0/16 private IP range.
+We're looking for internal scanning, which means both the source and destination IPs will be private IPs. If we look at the sample events from **log-session-0.csv**, the source IP (`203.0.113.25`) is public. Private IP ranges include:
+- **10.0.0.0/8**
+- **172.16.0.0/12**
+- **192.168.0.0/16**
+
+This automatically eliminates **log-session-1.csv**, since it contains the same events as **log-session-0.csv**, just in raw format. In **log-session-2.csv**, we can see that both the source and destination IPs are part of the 192.168.0.0/16 private IP range.
 
 **Answer**: log-session-2.csv
 
 ### Question 2 - How many log entries are present for the internal IP performing internal scanning activity?
-There are a few different ways you can achieve this using `grep`, `awk`, `cut`, etc. I use `awk`.
+There are a few different ways you can achieve this using `grep`, `awk`, `cut`, etc. One simple way to do this is with `awk`.
 ```
 awk -F'"' 'NR>1 {print $4}' log-session-2.csv | wc -l
 ```
 - `-F'"'` splits lines into fields using quotes as the delimiter
 - `NR>1` skips the first row which is the header
-- `{print $4}` returns the source IP on this case (`source.ip`). Because we are using quotes as the delimiter, the fields will look like this:
+- `{print $4}` returns the source IP in this case (`source.ip`). Because we are using quotes as the delimiter, the fields will look like this:
   - `$1` is empty because our line starts with a quote
   - `$2` is `@timestamp`
   - `$3` is `,`
   - `$4` is the `source.ip`
-- `log-sessions-2.csv` is our log file
+- `log-session-2.csv` is our log file
 - `| wc -l` counts the number of lines returned
  
-There are likely cleaner ways to do this, but this works. This returns 2276 events, which is "correct" as far as the accepted answer to the question goes, but in reality this is wrong. I modified the command to only return events where the `source.ip` and `destination.ip` were both private IPs to confirm all were actually internal-to-internal scanning and this returned 2020 events.
+There are likely cleaner ways to do this, but this works. This returns 2276 events, which matches the accepted answer for the lab. However, in reality this is wrong. I modified the command to only return events where the `source.ip` and `destination.ip` were both private IPs to confirm all were actually internal-to-internal scanning and this returned 2020 events.
 ```
 awk -F'"' 'NR>1 && $4 ~ /^(10\.|172\.16\.|192\.168\.)/ && $6 ~ /^(10\.|172\.16\.|192\.168\.)/ {print $4}' log-session-2.csv | wc -l
 ```
@@ -64,7 +69,7 @@ This is because there are many events where an internal IP is making ICMP reques
 ```
 "Sep 7, 2025 @ 17:09:05.440","192.168.230.127",8,"203.0.113.2",0,"-","-","-","-","{""ts"":1757264945.440747,""uid"":""CbVQdA2SKCdRkGMIvg"",""id.orig_h"":""192.168.230.127"",""id.orig_p"":8,""id.resp_h"":""203.0.113.2"",""id.resp_p"":0,""proto"":""icmp"",""duration"":2.3759799003601074,""orig_bytes"":224,""resp_bytes"":0,""conn_state"":""OTH"",""local_orig"":true,""local_resp"":true,""missed_bytes"":0,""orig_pkts"":4,""orig_ip_bytes"":336,""resp_pkts"":0,""resp_ip_bytes"":0,""community_id"":""1:cxLZTyBY3XbE62SdWoAZw0AlApg="",""orig_mac_oui"":""VMware, Inc.""}","zeek.conn"
 ```
-So it appears that whoever designed this lab made a mistake, either by accidentally including events in this log file that weren't internal-to-internal scans, or by incorrectly setting the correct answer. If this file was meant to only contain internal-to-internal scanning and was pulled from a SIEM, that would mean that either the query the person used to pull these events from the SIEM were flawed, or there is a mapping/parser problem with the SIEM (e.g., an event type specifically for internal-to-internal scanning). If the latter, this is where you would submit this finding to the team responsible for log management to have them fix it (in a real-world, enterprise environment).
+So it appears that whoever designed this lab made a mistake, either by accidentally including events in this log file that weren't internal-to-internal scans, or by incorrectly setting the correct answer. If this file was intended to contain only internal-to-internal scanning events and was exported from a SIEM, that would mean that either the query the person used to pull these events from the SIEM were flawed, or there is a mapping/parser problem with the SIEM (e.g., an event type specifically for internal-to-internal scanning). If the latter, this is where you would submit this finding to the team responsible for log management to have them fix it (in a real-world, enterprise environment).
 
 **Answer**: 2276
 
@@ -99,7 +104,7 @@ This could mean that this file contains vertical scanning activity, but not hori
 1 203.0.113.243
 ...
 ```
-It doesn't tell us what the subnet is though, so how do you find that out? The subnet number tells us how many bits of an IP address reprersent the network portion. Whatever is remaining belongs to the host. For `203.0.113.0/24`, the binary representation would look like this: `11111111.11111111.11111111.00000000`. So the first three octets of the IP rnage represent the network. The part for the host can range from 0-255 (203.0.113.0 - 203.0.113.255). How do we know it's `/24` though? We just count the number of bits for the part of the IP rangenthat is always the same. In the logs, the first three octets are always `203.0.113`. That's `8 x 3 = 24`. Since the entire last octet is available for the host, we would represent the range starting at the first available number for the fourth octet, which is `0`.
+It doesn't tell us what the subnet is though, so how do you find that out? The subnet number tells us how many bits of an IP address represent the network portion. Whatever is remaining belongs to the host. For `203.0.113.0/24`, the subnet mask in binary would look like this: `11111111.11111111.11111111.00000000`. So the first three octets of the IP range represent the network. The part for the host can range from 0-255 (203.0.113.0 - 203.0.113.255). How do we know it's `/24` though? We just count the number of bits for the part of the IP range that is always the same. In the logs, the first three octets are always `203.0.113`. That's `8 x 3 = 24`. Since the entire last octet is available for the host, we would represent the range starting at the first available number for the fourth octet, which is `0`.
 
 **Answer**: 203.0.113.0/24
 
@@ -131,7 +136,7 @@ We need to identify which log file contains an IP scanned only a few times. **lo
 ```
 Again, this means **log-session-1.csv** will be the same, so our answer is in the final log file. This is the file that had the horizontal scanning, so we can ignore that entire IP range from before
 ```
->$ awk -F'"' 'NR>1 && $6 !~ /^(203\.0\.113)/ {print $6}' log-session-2.csv | sort | uniq -c
+$ awk -F'"' 'NR>1 && $6 !~ /^(203\.0\.113)/ {print $6}' log-session-2.csv | sort | uniq -c
 
 2 -
 7 192.168.230.1
@@ -140,7 +145,7 @@ Again, this means **log-session-1.csv** will be the same, so our answer is in th
 ```
 We can also ignore `192.168.230.145` since there are thousands of events for it. Conversely, `239.255.255.250` only has one event so it's likely not that one either. `192.168.230.1` only has a few connection events so let's take a look at what the unique ports are.
 ```
->$ awk -F'"' 'NR>1 && $6 ~ /^(192\.168\.230\.1)$/ {print $7}' log-session-2.csv | sort| uniq -c
+$ awk -F'"' 'NR>1 && $6 ~ /^(192\.168\.230\.1)$/ {print $7}' log-session-2.csv | sort| uniq -c
 
 2 ,0,
 2 ,3389,
@@ -158,7 +163,7 @@ Searching for logs in Elastic is done within the **Analytics** &rarr; **Discover
 
 <img width="218" height="703" alt="image" src="https://github.com/user-attachments/assets/d3e9d047-292a-426e-8033-162ccf2901a9" />
 
-Data is typically (and should be) seperated in different **Data views** of **indexes**. For this lab, our data is under the **All logs** index.
+Data is typically (and should be) separated in different **Data views** of **indexes**. For this lab, our data is under the **All logs** index.
 
 <img width="363" height="380" alt="image" src="https://github.com/user-attachments/assets/9debf17c-0707-4527-8593-b342495c55da" />
 
@@ -171,7 +176,7 @@ Data!
 <img width="1917" height="707" alt="image" src="https://github.com/user-attachments/assets/57558fb4-a755-4296-bad3-fc7f86d7b8fb" />
 
 ### Question 1 - Which source IP performs a ping sweep attack across a whole subnet?
-A ping sweep is an ICMP based scanning technique, which is one of the most basic types of scanning. I use **Kibana Query Language (KQL)**, but it looks like there is also a new piped language structure called **[ES|QL](https://www.elastic.co/docs/reference/query-languages/esql)**, which almost looks like a child between **Splunk Query Language (SPL)** and **Structured Query Language (SQL)** at first glance.
+A ping sweep is an ICMP based scanning technique, which is one of the most basic types of scanning. I use **Kibana Query Language (KQL)**, but it looks like there is also a new piped language structure called **[ES|QL](https://www.elastic.co/docs/reference/query-languages/esql)**, which looks somewhat like a hybrid between **Splunk Query Language (SPL)** and **SQL**.
 
 I digress, in order to find our answer we need to identify ICMP traffic. Looking at the field options, `network.protocol` looks like a safe bet: `network.protocol: icmp`. This gives us 256 **documents** (which is like a record or event in Elastic speak, represented as JSON).
 
@@ -193,7 +198,7 @@ We can see that the `destination.ip` has a pattern of IPs that look like they be
 
 <img width="503" height="566" alt="image" src="https://github.com/user-attachments/assets/c6ce33c9-5682-435d-a59f-59b7afd6c1b8" />
 
-I would show a better way to do this is by creating a **Lens** visualization, but it looks like this instance doesn't haven't it configured correctly.
+I would show a better way to do this is by creating a **Lens** visualization, but it looks like this instance doesn't have it configured correctly.
 
 **Answer**: 192.168.230.127
 
@@ -206,7 +211,7 @@ This indicates that a connection attempt was made, but there was no response fro
 
 <img width="437" height="428" alt="image" src="https://github.com/user-attachments/assets/ec8fc469-7662-4d52-ad37-f0604bff3ca0" />
 
-Some more Googling brought be to the official Zeek GitHub repository, specifically **[zeek/scripts/base/protocols/conn/main.zeek](https://github.com/zeek/zeek/blob/master/scripts/base/protocols/conn/main.zeek)**. Doing a Ctrl + F brought me to this code snippet
+Some more Googling brought me to the official Zeek GitHub repository, specifically **[zeek/scripts/base/protocols/conn/main.zeek](https://github.com/zeek/zeek/blob/master/scripts/base/protocols/conn/main.zeek)**. Doing a Ctrl + F brought me to this code snippet
 ```
 ...
 else if ( rs == TCP_CLOSED && os == TCP_CLOSED )
@@ -223,7 +228,7 @@ else
   return "OTH";
 ...
 ```
-You can see on the line where I added `<----LOOK HERE`, that there is the same conn_state value. The condition for it to be returned looks to be related tp **TCP SYN**. If we look back at our logs in Elastic, we can actually see that the `network.protocol` value is also `tcp`.
+You can see on the line where I added `<----LOOK HERE`, that there is the same conn_state value. The condition for it to be returned looks to be related to **TCP SYN**. If we look back at our logs in Elastic, we can actually see that the `network.protocol` value is also `tcp`.
 
 <img width="969" height="695" alt="image" src="https://github.com/user-attachments/assets/1f7ffbed-668a-4e50-a960-08bb6e0407b0" />
 
