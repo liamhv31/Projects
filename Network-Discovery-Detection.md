@@ -1,3 +1,6 @@
+## Overview
+This lab analyzes network scanning activity using exported SIEM logs and Zeek connection data to identify internal and external reconnaissance behavior. By examining connection attempts, IP address patterns, and port activity, it demonstrates how to distinguish between horizontal and vertical scans and determine the source of scanning activity. The lab also shows how tools like awk and Elastic (Kibana) can be used to investigate logs, filter network protocols, and interpret connection states to understand the mechanics of different scanning techniques.
+
 ## External vs Internal Scanning
 
 ### Question 1 - Which file contains logs that showcase internal scanning activity?
