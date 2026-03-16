@@ -200,9 +200,11 @@ I would show a better way to do this is by creating a **Lens** visualization, bu
 ### Question 2 - The zeek.conn.conn_state value shows the connection state. Using the information provided by this value, identify the type of scan being performed by 203.0.113.25 against 192.168.230.145
 First, we need to return only the documents for those specific source and destination IPs: `source.ip: 203.0.113.25 and destination.ip: 192.168.230.145`. If we click on the `zeek.conn.conn_state` field, we can see that there is only one connection state which is `S0`.
 
+<img width="488" height="338" alt="image" src="https://github.com/user-attachments/assets/bf8c522c-b908-4f92-8984-3b002e53dad3" />
+
 This indicates that a connection attempt was made, but there was no response from the destination. I was looking at the different `conn_state` values in the **[base/protocols/conn/main.zeek](https://docs.zeek.org/en/current/scripts/base/protocols/conn/main.zeek.html#field-Conn::Info$conn_state)** documentation, but it didn't really indicate what the type of scanning activity could be.
 
-<Insert image>
+<img width="437" height="428" alt="image" src="https://github.com/user-attachments/assets/ec8fc469-7662-4d52-ad37-f0604bff3ca0" />
 
 Some more Googling brought be to the official Zeek GitHub repository, specifically **[zeek/scripts/base/protocols/conn/main.zeek](https://github.com/zeek/zeek/blob/master/scripts/base/protocols/conn/main.zeek)**. Doing a Ctrl + F brought me to this code snippet
 ```
@@ -223,7 +225,7 @@ else
 ```
 You can see on the line where I added `<----LOOK HERE`, that there is the same conn_state value. The condition for it to be returned looks to be related tp **TCP SYN**. If we look back at our logs in Elastic, we can actually see that the `network.protocol` value is also `tcp`.
 
-<Insert image>
+<img width="969" height="695" alt="image" src="https://github.com/user-attachments/assets/1f7ffbed-668a-4e50-a960-08bb6e0407b0" />
 
 One of the most common types of scans is **TCP SYN**. This is also considered a stealthy scanning technique since the scan often blends in with legitimate network traffic making it harder to detect.
 
@@ -232,6 +234,6 @@ One of the most common types of scans is **TCP SYN**. This is also considered a 
 ### Question 3 - Is there any UDP scanning attempt in the logs? Y/N
 This is a very easy answer, since we can just click on the `network.protocol` field to see if there are any UDP events.
 
-<Insert image>
+<img width="473" height="348" alt="image" src="https://github.com/user-attachments/assets/2e67d512-240f-4b21-83f3-78b7fa60896e" />
 
 **Answer**: N
