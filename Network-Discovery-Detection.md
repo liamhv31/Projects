@@ -198,10 +198,8 @@ I would show a better way to do this is by creating a **Lens** visualization, bu
 **Answer**: 192.168.230.127
 
 ### Question 2 - The zeek.conn.conn_state value shows the connection state. Using the information provided by this value, identify the type of scan being performed by 203.0.113.25 against 192.168.230.145
-If we click on the `zeek.conn.conn_state` field, we can see that there is only one connection state which is `S0`.
+First, we need to return only the documents for those specific source and destination IPs: `source.ip: 203.0.113.25 and destination.ip: 192.168.230.145`. If we click on the `zeek.conn.conn_state` field, we can see that there is only one connection state which is `S0`.
 
-<Insert image>
-  
 This indicates that a connection attempt was made, but there was no response from the destination. I was looking at the different `conn_state` values in the **[base/protocols/conn/main.zeek](https://docs.zeek.org/en/current/scripts/base/protocols/conn/main.zeek.html#field-Conn::Info$conn_state)** documentation, but it didn't really indicate what the type of scanning activity could be.
 
 <Insert image>
