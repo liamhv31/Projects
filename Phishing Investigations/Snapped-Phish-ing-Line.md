@@ -1,18 +1,18 @@
 ## Snapped Phish-ing Line
 
 ### Overview
-As an IT department personnel of SwiftSpend Financial, one of your responsibilities is to support your fellow employees with their technical concerns. While everything seemed ordinary and mundane, this gradually changed when several employees from various departments started reporting an unusual email they had received. Unfortunately, some had already submitted their credentials and could no longer log in.
+As a member of the IT department at SwiftSpend Financial, one of your responsibilities is to support your fellow employees with their technical concerns. While everything seemed ordinary and mundane, this gradually changed when several employees from different departments began reporting an unusual email they had received. Unfortunately, some had already submitted their credentials and could no longer log in.
 
 ### Task
-You now proceeded to investigate what is going on by:
-1. Analysing the email samples provided by your colleagues
+You now proceed to investigate the situation by:
+1. Analyzing the email samples provided by your colleagues
 2. Analysing the phishing URL(s) by browsing it using Firefox
 3. Retrieving the phishing kit used by the adversary
 4. Using CTI-related tooling to gather more information about the adversary
 5. Analysing the phishing kit to gather more information about the adversary
 
 ### Question 1 - Who is the individual who received an email attachment containing a PDF?
-There are five different phishing email samples. I opened up each one to look at the attachment types. As mentioned in the previous lab, almost all email clients will show the attachment either at the top or bottom of the email. You can always find the attached content by looking at the `Content-Type` and `Content-Disposition` fields in the email source. The email with the PDF is the one titled **Quote for Services Rendered: processed on June 29, 2020, 10:01:32 AM**
+There are five different phishing email samples. I opened each email to examine the attachment types. As mentioned in the previous lab exercise, almost all email clients will show the attachment either at the top or bottom of the email. You can always find the attached content by looking at the `Content-Type` and `Content-Disposition` fields in the email source. The email with the PDF is the one titled **Quote for Services Rendered: processed on June 29, 2020, 10:01:32 AM**
 
 <img width="885" height="823" alt="image" src="https://github.com/user-attachments/assets/1604170f-a341-4a11-b059-75110d673edf" />
 
@@ -26,18 +26,18 @@ You should be able to see this at the top of your email client. It is the same e
 **Answer**: Accounts.Payable@groupmarketingonline.icu
 
 ### Question 3 - What is the redirection URL to the phishing page for the individual Zoe Duncan? (defanged format)
-Zoe Duncan's email is the one titled **Group Marketing Online Direct Credit Advice**. If you look at the HTML attachment, you can find the answer. I saved it to the **Downloads** folder and then used `cat` to dump the contents to the command line. It's not a big file so need to `grep` anything.
+Zoe Duncan's email is the one titled **Group Marketing Online Direct Credit Advice**. If you look at the HTML attachment, you can find the answer. I saved it to the **Downloads** folder and then used `cat` to dump the contents to the command line. The file is small, so there is no need to use `grep`.
 
 <img width="879" height="250" alt="image" src="https://github.com/user-attachments/assets/2614c7e0-7f51-425b-be32-aca66db871b6" />
 
-Then we just need to defang it using **CyberChef**. Make sure you select all of the **Defang URL** options (escape dots, escape http, and escape ://)
+The URL can then be defanged using **CyberChef**. Make sure you select all of the **Defang URL** options (escape dots, escape http, and escape ://)
 
 <img width="884" height="663" alt="image" src="https://github.com/user-attachments/assets/b2fdf2d9-078f-4ddd-9338-e2d6c15db66c" />
 
 **Answer**: hxxp[://]kennaroads[.]buzz/data/Update365/office365/40e7baa2f826a57fcf04e5202526f8bd/?email=zoe[.]duncan@swiftspend[.]finance&error
 
 ### Question 4 - What is the URL to the .zip archive of the phishing kit? (defanged format)
-We can find this by searching through the URL paths of the phsihing domain. This can be safely done in the VM we have, without risk of infecting our network. I started by looking at the main domain - **hxxp[://]kennaroads[.]buzz**. Nothing really stood out to me there.
+We can find this by searching through the URL paths of the phishing domain. This can be safely done in the VM we have, without risk of infecting our network. I started by looking at the main domain - **hxxp[://]kennaroads[.]buzz**. Nothing really stood out to me there.
 
 <img width="883" height="802" alt="image" src="https://github.com/user-attachments/assets/21d260fb-0db9-4186-acfc-5fc84137edde" />
 
@@ -69,7 +69,7 @@ Unfortunately, the SSL certificate is no longer available to answer this questio
 **Answer**: 2020-04-08 21:55:50 UTC
 
 ### Question 8 - What was the email address of the user who submitted their password twice?
-I wasn't sure on how to find the answer to this riht away. My thought process ended up being that the attacker would have this information, not us. I started looking through the **data** URL path and found a **log.txt** file at **hxxp[://]kennaroads[.]buzz/data/Update365/log[.]txt**. This is where the answer was.
+I wasn't sure on how to find the answer to this right away. My thought process ended up being that the attacker would have this information, not us. I started looking through the **data** URL path and found a **log.txt** file at **hxxp[://]kennaroads[.]buzz/data/Update365/log[.]txt**. This is where the answer was.
 
 <img width="942" height="803" alt="image" src="https://github.com/user-attachments/assets/ce303572-5a31-49b7-be9c-f9ddb9ae4981" />
 
@@ -82,7 +82,7 @@ I unzipped the archive using the following command (from the directory of the zi
 
 <img width="596" height="305" alt="image" src="https://github.com/user-attachments/assets/6c26825f-3c7b-448e-a8f1-1865b8ffc443" />
 
-This was a bit overwhelming, and I wasn't sure where to begin looking. All I know is that I needed to fins an email address. Thankfully, there is a very powerful and helpful tool called `grep`. When combined with some regex, this should help us tremendously. I need to search through every file in the `office365` directory, including all of the subdirectories, for email addresses. This means I need to use grep **recursively**. This can be achieved with the `-R` flag.
+This was a bit overwhelming, and I wasn't sure where to begin looking. All I know is that I needed to find an email address. Thankfully, there is a very powerful and helpful tool called `grep`. When combined with some regex, this should help us tremendously. I need to search through every file in the `office365` directory, including all of the subdirectories, for email addresses. This means I need to use grep **recursively**. This can be achieved with the `-R` flag.
 
 I'm also using a long and somewhat complex regex pattern to find email addresses: `[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}`. If I just grep regex normally, it uses **Basic Regular Expressions (BRE)** by default. This is a bit older and harder to work with since some characters are treated as literals, and more things need to be escaped compared to modern regex. By using the `-E` flag, that tells grep to use **Extended Regular Expressions (ERE)**. This is more aligned with modern regex that we're used to.
 
@@ -149,7 +149,7 @@ You could also do it this way: `grep -RE --binary-files=without-match "[a-zA-Z0-
 Lots of stuff! But only a couple emails. Now, you can just trial and error these to see which is the answer, but it's important to actually understand "why?" it's the answer. Let's look at the contents of each file, starting with `updat.cmd`
 
 #### updat.cmd
-This file appears to be the front page of the phishing kit. It asks the user to select the client they wish to login with to access the attachment. Presumabely each of these lead to a fake login page.
+This file appears to be the front page of the phishing kit. It asks the user to select the client they wish to login with to access the attachment. presumably each of these lead to a fake login page.
 ```
 <div class="foot-lnk">To access the attached document, Select with email provider below. </div>
 ...
@@ -203,7 +203,7 @@ The exfiltration email that it wants to send data to appears to be `jamestanner2
 $to ="jamestanner2299@gmail.com"
 ```
 
-However, it doesn't seem like this file would even run. For starters, a signficant portion is commented out (`<!--,-->`).
+However, it doesn't seem like this file would even run. For starters, a significant portion is commented out (`<!--,-->`).
 ```
 <!--<div class="top"></div>-->
     <!--<input id="tab-1" type="radio" name="tab" class="sign-in" checked><label for="tab-1" class="tab">Sign In</label>
@@ -235,7 +235,7 @@ However, it doesn't seem like this file would even run. For starters, a signfica
 		<input id="tab-2" type="radio" name="tab" class="sign-up"><label for="tab-2" class="tab">Sign Up</label>-->
 ```
 
-There also doesn't appear to be any `<?php ?>` tags, which PHP requires to run afaik. Some statements are also missing semicolons (`;`) to complete the line. There's no function or statement to actually send the data to the specified email. For reasons I can't tell, there's also duplicated code blocks, suggesting that this is a very amataeur, and poorly developed phishing kit. At first glance, it might seem that `jamestanner2299@gmail.com` is the right answer, but the file wouldn't actually do anything, so I don't believe that's correct.
+There also doesn't appear to be any `<?php ?>` tags, which PHP requires to run afaik. Some statements are also missing semicolons (`;`) to complete the line. There's no function or statement to actually send the data to the specified email. For reasons I can't tell, there's also duplicated code blocks, suggesting that this is a very amateur, and poorly developed phishing kit. At first glance, it might seem that `jamestanner2299@gmail.com` is the right answer, but the file wouldn't actually do anything, so I don't believe that's correct.
 
 #### script.st
 This script looks almost the same as the previous one, except no duplicated code. The goal appears to be the same outcome - collect and exfiltrate credentials to a phishing email. Though this script would also not work as it is plagued with many of the same syntax errors as the previous script. Not much more analysis to be done with this one.
@@ -288,7 +288,7 @@ $url = random_number().random_number().random_number().random_number().random_nu
 header('location:'.$url);
 ```
 
-3. Collects the vistims information like country, IP, address, email, password, etc:
+3. Collects the victims information like country, IP, address, email, password, etc:
 ```
 $country = visitor_country();
 $browser = $_SERVER['HTTP_USER_AGENT'];
@@ -349,15 +349,15 @@ This might have been the hardest question for me. I knew what flag I was looking
 
 <img width="1202" height="37" alt="image" src="https://github.com/user-attachments/assets/2c98c6e4-47f7-44b4-b034-e893b407927a" />
 
-I even tried looking for any consecutive three, non-whitespace characters instead of `THM`, but nothing. I checked the filenames in every directory too but no dice. My next thought was to check the domain. I didn't really feel like going through every single sub domain myself so I tried to enumnerate them programatically. I used every tool I could think of: `subfinder` and `amass` for passive domain enumeration. `curl` for looking at Certificate Transparency (CT) logs to find TLS certs issued for subdomains. More brute-forcy tools for DNS enumeration like `dnsenum` and `dnsrecon`. None worked, and I couldn't install any on the machine that I was using. I supposed I could do it on another system I had control over, but I felt like that would defeat the purpose of this lab.
+I even tried looking for any consecutive three, non-whitespace characters instead of `THM`, but nothing. I checked the filenames in every directory too but no dice. My next thought was to check the domain. I didn't really feel like going through every single sub domain myself so I tried to enumerate them programatically. I used every tool I could think of: `subfinder` and `amass` for passive domain enumeration. `curl` for looking at Certificate Transparency (CT) logs to find TLS certs issued for subdomains. More brute-force tools for DNS enumeration like `dnsenum` and `dnsrecon`. None worked, and I couldn't install any on the machine that I was using. I supposed I could do it on another system I had control over, but I felt like that would defeat the purpose of this lab.
 
-The last thing I tried was searching the domain on VirusTotal. I have an enterprise account ( :P ), so I was hoping that would show me something. I searched through everything and nothing. I checked through the log.txt file hosted on the site but nothing there either. I looked through every accesible domain, including the **/data** path, nothing again. I even started digging through the inspection tool to find the answer. All the email sources? Sesarched that too.
+The last thing I tried was searching the domain on VirusTotal. I have an enterprise account ( :P ), so I was hoping that would show me something. I searched through everything and nothing. I checked through the log.txt file hosted on the site but nothing there either. I looked through every accessible domain, including the **/data** path, nothing again. I even started digging through the inspection tool to find the answer. All the email sources? Searched that too.
 
 I decided to look at the hint which said that the flag would be in a `.txt` file and could be downloadable from the URL with some "adjustments". It also said to look through all of the subdomains which I already did. I honestly had no idea what to do at this point so admittedly I looked at what other people did. This obviously gave me the answer, but the one issue was that **no one** was able to give any explanation on how they knew to look for **flag.txt**, which is the hidden file containing the flag. They all just said: "search for 'flag.txt'". Okay, sure, but **how** do you know that? The hint didn't tell us the file name to search for.
 
 The one person I saw who did this challenge that actually had some kind of explanation and thought process was Hank Hackerson's video [SOC Lvl 1 CTF Challenge / Snapped Phishing Line / TryHackMe SOC Level 1 Training](https://www.youtube.com/watch?v=ymHC__LARm8). He just tried a bunch of things like I did and got lucky by looking for **flag.txt** in the right subdomain. I still think there's a better way than just blind luck to figure this out, but I honestly wasn't able to find it.
 
-Anyway, the **flag.txt** file contains thw following secret: `fUxSVV8zSHRfaFQxd195NExwe01IVAo=`. Just based off of the `=` padding, I bet it's a base64 encoded string. Sure emough, it was, and throwing it into CyberChef gives us the flag we've been looking for! Well, kind of. It looks like it's in reverse almost: `}LRU_3Ht_hT1w_y4Lp{MHT`. After doing a bit of research, CyberChef has a way to reverse characters, so this is what the final recipe should look like:
+Anyway, the **flag.txt** file contains the following secret: `fUxSVV8zSHRfaFQxd195NExwe01IVAo=`. Just based off of the `=` padding, I bet it's a base64 encoded string. Sure enough, it was, and throwing it into CyberChef gives us the flag we've been looking for! Well, kind of. It looks like it's in reverse almost: `}LRU_3Ht_hT1w_y4Lp{MHT`. After doing a bit of research, CyberChef has a way to reverse characters, so this is what the final recipe should look like:
 
 <img width="1538" height="896" alt="image" src="https://github.com/user-attachments/assets/24bacc80-d7d1-4dab-8e68-0c465ed38f99" />
 
