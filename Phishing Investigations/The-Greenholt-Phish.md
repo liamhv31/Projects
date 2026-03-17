@@ -1,7 +1,7 @@
 ## The Greenholt Phish
 
 ### Overview
-A Sales Executive at Greenholt PLC received an email that he didn't expect to receive from a customer. He claims that the customer never uses generic greetings such as "Good day" and didn't expect any amount of money to be transferred to his account. The email also contains an attachment that he never requested. He forwarded the email to the SOC (Security Operations Center) department for further investigation.
+A Sales Executive at Greenholt PLC received an unexpected email from a customer.He noted that the customer typically does not use generic greetings such as "Good day" and didn't expect any amount of money to be transferred to his account. The email also contains an attachment that he never requested. He forwarded the email to the SOC (Security Operations Center) department for further investigation.
 
 ### Task
 Investigate the email sample to determine if it is legitimate.
