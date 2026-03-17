@@ -1,17 +1,18 @@
 ### Scenario
-You are a Level 1 SOC Analyst. Several suspicious emails have been forwarded to you from other coworkers. You must obtain details from each email for your team to implement the appropriate rules to prevent colleagues from receiving additional spam/phishing emails.
+You are a Level 1 SOC Analyst. Several suspicious emails have been forwarded to you by coworkers. You must obtain details from each email so your team can implement appropriate rules to prevent colleagues from receiving additional spam/phishing emails.
+
 ### Task
 Use the tools discussed throughout this room (or use your own resources) to help you analyze each email header and email body.
 
 ### Question 1 - What brand was this email tailored to impersonate?
-This one was very straightforward. I just opened up the Phish3Case1.eml file in the VM. This will open up the original email in the Outlook client installed on the system. From there we can see the name of the company the email is attempting to impersonate plastered throughout the message.
+This one was very straightforward. I just opened up the Phish3Case1.eml file in the VM. This opens the original email in the Outlook client installed on the system. From there, we can see the name of the company the email is attempting to impersonate displayed throughout the message.
 
 <img width="941" height="844" alt="image" src="https://github.com/user-attachments/assets/f76a0086-feb7-4016-bf66-8ab154eda4e7" />
 
 **Answer**: Netflix
 
 ### Question 2 - What is the From email address?
-Another easy one. You can see the sender address at the top of the email.
+Another easy one. You can see the sender's address at the top of the email.
 
 <img width="938" height="840" alt="image" src="https://github.com/user-attachments/assets/a8889b1a-00ac-497a-8528-e7203313d789" />
 
@@ -20,18 +21,18 @@ Another easy one. You can see the sender address at the top of the email.
 **Note**: The answer is not in defanged format, but I did that here to sanitize the domain.
 
 ### Question 3 - What is the originating IP? Defang the IP address
-For this one you'll need to open the raw email format. In this Outlook client, that's done by going to **View** &rarr; **Message Source**.
+For this question, you will need to open the raw email format. In this Outlook client, this can be done by navigating to **View** &rarr; **Message Source**.
 
 <img width="941" height="842" alt="image" src="https://github.com/user-attachments/assets/28a830a9-109a-4b9c-913f-d0693ee95dff" />
 
-Then on line four, you will see the **X-Originating-Ip**. This is your answer.
+On line four, you will see the **X-Originating-IP** header. This is your answer.
 
 <img width="638" height="510" alt="image" src="https://github.com/user-attachments/assets/79364678-cee3-4372-ba78-df76536f29ce" />
 
 **Answer**: 209[.]85[.]167[.]226
 
 ### Question 4 - From what you can gather, what do you think will be a domain of interest? Defang the domain
-This one can either be done by manually looking through the raw email data (not recommended, even though you don't have to search far :smiley:), or by using CyberChef to extract all of the relevant domains. The key thing to note here is the word **domains**, not URLs. Make sure to use the right CyberChef recipe.
+This one can either be done by manually looking through the raw email data (not recommended, even though you don't have to search far :smiley:), or by using CyberChef to extract all of the relevant domains. The key detail here is that the question asks for **domains**, not URLs. Make sure to use the correct CyberChef recipe for extracting domains.
 
 1. I selected the **Extract domains** operation. You can search for it then just drag it into the **Recipe** box.
 
@@ -41,7 +42,7 @@ This one can either be done by manually looking through the raw email data (not 
 
 <img width="472" height="754" alt="{E0C4DF94-B302-4C4C-A229-52DEBF377CF0}" src="https://github.com/user-attachments/assets/9015217f-9474-4c14-b2b2-7be24f494774" />
 
-3. Now it is just a matter of going through them. I skipped all of the commonly known domains to start (yahoo.com, google.com. gmail.com, etc.). The first domain of interest is **etekno[.]xyz**. Scanning briefly through the raw email data, we can see that this is the domain of the senders email. Very much a domain of interest I would say. Next we have **gogolecloud[.]com**. This looks like a potential typo squat of Google Cloud (which is actually cloud.google.com). **DMARC** is also showing as **unknown**, and **SPF** as **none**, meaning nothing verified who this email was claiming to be. All of these in combination point towards classic phishing infrastructure. Next up is **gstatic[.]com**. After performing some Google searches and OSINT lookups, we can see that this domain is owned by Google and is used as a Content Delivery Network (CDN) for serving static web content. <img width="1185" height="695" alt="{8F48AC9F-0B82-4795-BD0E-1A700EB421C5}" src="https://github.com/user-attachments/assets/42c7a769-30f1-441e-b6b0-da2f59ddd2e0" /> Nothing to be concerned about.
+3. Now it is just a matter of going through them. I skipped all of the commonly known domains to start (yahoo.com, google.com. gmail.com, etc.). The first domain of interest is **etekno[.]xyz**. A quick review of the raw email data shows that this domain belongs to the sender's email address. Very much a domain of interest I would say. Next we have **gogolecloud[.]com**. This looks like a potential typo squat of Google Cloud (which is actually cloud.google.com). **DMARC** is also showing as **unknown**, and **SPF** as **none**, meaning nothing verified who this email was claiming to be. All of these in combination point towards classic phishing infrastructure. Next up is **gstatic[.]com**. After performing some Google searches and OSINT lookups, we can see that this domain is owned by Google and is used as a Content Delivery Network (CDN) for serving static web content. <img width="1185" height="695" alt="{8F48AC9F-0B82-4795-BD0E-1A700EB421C5}" src="https://github.com/user-attachments/assets/42c7a769-30f1-441e-b6b0-da2f59ddd2e0" /> Nothing to be concerned about.
 
 The first two domains we found are a good starting point. If we look at the answer, the domain name is 6 characters long (not including the square bracket part of the defanged format). This eliminates **gogolecloud[.]com** as the answer, but **etekno[.]xyz** fits perfectly, and that's our answer.
 
