@@ -52,7 +52,7 @@ Received: from hwsrv-737338.hostwindsdns.com ([192.119.71.157]:51810 helo=mutawa
 	for webmaster@redacted.org; Wed, 10 Jun 2020 01:02:04 -0400
 ```
 
-This will show the **mail-routing trace**, showing every destination the email hit before getting to you (and where it came from). The destinations, or hops, are in **ascedning** order, meaning that the first **Recieved** entry at the bottom is where is first entered the mailing system, and the top entry is the last destination before reaching you. So with that in mind, if we want to find where the email came from, we look at the bottom. There's alot of interesting information there, but what we're looking for is the IP, which is also there!
+This will show the **mail-routing trace**, showing every destination the email hit before getting to you (and where it came from). The destinations, or hops, are in **ascending** order, meaning that the first **Recieved** entry at the bottom is where is first entered the mailing system, and the top entry is the last destination before reaching you. So with that in mind, if we want to find where the email came from, we look at the bottom. There's a lot of interesting information there, but what we're looking for is the IP, which is also there!
 
 <img width="959" height="445" alt="image" src="https://github.com/user-attachments/assets/9c500e19-f877-466a-b196-2700dac35fc1" />
 
@@ -65,10 +65,10 @@ This admittedly took me some time to figure out. At first, I thought the answer 
 
 The question says not to include the "." in the answer, and without it, this matches the pattern of the answer it's looking for. Sure enough, it was correct. I'm a bit surprised as I interpreted the question as "who owns the domain which is using Hostwinds to host it". I doubt that Hostwinds _actually_ owns that domain themselves, and it is likely someone using Hostwind's services to host their mail VPS (virtual private server).
 
-**Asnwer**: Hostwinds LLC
+**Answer**: Hostwinds LLC
 
 ### Question 7 - What is the SPF record for the Return-Path domain?
-You can find the the `Return-Path` field in the email source, just **Ctrl+F** for it. 
+You can find the `Return-Path` field in the email source, just **Ctrl+F** for it. 
 
 <img width="476" height="92" alt="image" src="https://github.com/user-attachments/assets/b3b430de-01c7-4ad9-a69e-763125eda6f6" />
 
@@ -87,12 +87,12 @@ No matter the email client, you can usually find this by looking at the email it
 **Answer**: SWT_#09674321____PDF__.CAB
 
 ### Question 10 - What is the SHA256 hash of the file attachment?
-There are a couple different ways you can do this. The easiest is to save the attachement (do **not** double-click it, do **not** open it) from the email and use the command line to show the hash value. You can do this on Linux by doing the following: `sha256sum SWT_#09674321____PDF__.CAB`.
+There are a couple different ways you can do this. The easiest is to save the attachment (do **not** double-click it, do **not** open it) from the email and use the command line to show the hash value. You can do this on Linux by doing the following: `sha256sum SWT_#09674321____PDF__.CAB`.
 
 <img width="957" height="845" alt="image" src="https://github.com/user-attachments/assets/5e73c63e-925b-4312-ac3b-e64b3147d080" />
 <img width="459" height="137" alt="image" src="https://github.com/user-attachments/assets/34cc5d3b-af5b-487c-ae67-bdb83a44dee3" />
 
-If you can though, I would **highly** recommend that you do this in a VM or sandbox to be extra safe in case of accidently opening or running anything. Basically a system that is used for the purpose of analysis and can be disposed of after, without having the risk of infecting the network. In a real SOC environment, you _should_ have sandboxing in place automatically that sends any attachments directly from the email to this sandbox for automatic detonation and analysis.
+If you can though, I would **highly** recommend that you do this in a VM or sandbox to be extra safe in case of accidentally opening or running anything. This is typically a disposable system used specifically for malware analysis, without having the risk of infecting the network. In a real SOC environment, you _should_ have sandboxing in place automatically that sends any attachments directly from the email to this sandbox for automatic detonation and analysis.
 
 **Answer**: 2e91c533615a9bb8929ac4bb76707b2444597ce063d84a4b33525e25074fff3f
 
@@ -117,7 +117,7 @@ I initially converted into Kilobytes, but VirusTotal converts to Kibibytes. So n
 ### Question 12 - What is the actual file extension of the attachment?
 As the question implies, the actual file extension is not **CAB**, which is an archive-file format for Microsoft Windows. You can see the actual file extension type in the VirusTotal search. Look either at the file tags in the scan overview or in the **Basic properties** section of the **Details** tab.
 
-You should seldom trust the filename or extension type you see from the email client, file explorer, or command line. These things are cosmetic and can easily by manipulated. The bytes don't lie though :). When in doubt, **check the bytes**!
+You should seldom trust the filename or extension type you see from the email client, file explorer, or command line. These things are cosmetic and can easily be manipulated. The bytes don't lie though :). When in doubt, **check the bytes**!
 
 <img width="957" height="476" alt="image" src="https://github.com/user-attachments/assets/25201c5e-b1f4-4cbe-9d88-676de6e2b38a" />
 
