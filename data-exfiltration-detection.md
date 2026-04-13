@@ -16,5 +16,10 @@ This query returns us some high-entropy domain names. Another important thing to
 **Answer**: tunnelcorp.net
 
 ### Question 2 - How many suspicious traffic/logs related to dns tunneling were observed?
+You can see the total number of packets returned from the query at the bottom of Wireshark.
+
+<img width="239" height="28" alt="image" src="https://github.com/user-attachments/assets/640dcc61-d716-4ab2-a273-94c7e0949e44" />
+
+**Answer**: 315
 
 ### Question 3 - Which local IP sent the maximum number of suspicious requests?
