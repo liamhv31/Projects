@@ -88,3 +88,36 @@ index=data_exfil sourcetype="dns_logs"
 <img width="1908" height="184" alt="image" src="https://github.com/user-attachments/assets/6cb0f44e-ae30-4f35-86da-68531006ca57" />
 
 **Answer**: 192.168.1.103
+
+## Detection: Data Exfil Through FTP
+**Note**: The FTP part of the lab will not involve Splunk since there is no FTP data in this Splunk instance
+
+### Question 1 - How many connections were observed from the guest account?
+
+#### Wireshark
+Since this is FTP, we need to find FTP events where the `USER` is in cleartext. We can do this with the following query:
+```
+ftp.request.command == "USER" && ftp.request.arg == "guest"
+```
+
+<img width="796" height="125" alt="image" src="https://github.com/user-attachments/assets/5a7ecaf6-7c52-4012-be6b-fb0aee8e34a2" />
+
+**Answer**: 5
+
+### Question 2 - What is the name of the customer-related file exfiltrated from the root account?
+We just need to modify the previous query to return events for the `root` account instead of `guest`.
+```
+ftp.request.command == "USER" && ftp.request.arg == "root"
+```
+If you select each packet and expand the FTP tree, you can see the `STOR` (upload) command and the name of the file transferred.
+
+<img width="647" height="157" alt="image" src="https://github.com/user-attachments/assets/09a2c0c8-ea16-4446-bed0-d62dc1e85b45" />
+
+There's also another file being transferred from `root` called `internal_passwords.csv` but the question is asking for the **customer-related file**. We can't see the contents but judging off name alone, this file would not be the answer.
+
+**Answer**: customer_data.xlsx
+
+### Question 3 - Which internal IP was found to be sending the largest payload to an external IP?
+
+### Question 4 - What is the flag hidden inside the ftp stream transferring the CSV file to the suspicious IP?
+
