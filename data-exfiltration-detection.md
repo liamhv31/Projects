@@ -118,6 +118,36 @@ There's also another file being transferred from `root` called `internal_passwor
 **Answer**: customer_data.xlsx
 
 ### Question 3 - Which internal IP was found to be sending the largest payload to an external IP?
+There are a couple different ways we can go about this. First, let's apply a filter where we only return packets where the traffic is FTP and only internal-to-external. Wireshark allows subnet searches.
+```
+ftp && (ip.src == 192.168.0.0/16 or ip.src == 10.0.0.0/8 or ip.src == 172.16.0.0/12) and !(ip.dst == 10.0.0.0/8 or ip.dst == 172.16.0.0/12 or ip.dst == 192.168.0.0/16)
+```
+Now we can use the **Statistics** &rarr; **Conversations** menu to find our answer. This feature provides details of traffic passed between two endpoints. Open the menu and click on the IPv4 tab. We can see all of the fields are nicely organized in a table format. Click on the **Bytes A &rarr; B** column to sort in descending order.
+
+<img width="1634" height="786" alt="image" src="https://github.com/user-attachments/assets/0fc674bf-b01e-4670-9ab0-0713b27409dc" />
+
+You can also use the **Statistics** &rarr; **Endpoints** feature, but this will only show you the total bytes sent, and you would need to cross-check if it was to an external IP. You can also just use the regular filtered view, but I find the **Conversations** menu has a cleaner look
+
+**Answer**: 192.168.1.105
 
 ### Question 4 - What is the flag hidden inside the ftp stream transferring the CSV file to the suspicious IP?
+The first thing we need to do is identify the suspicious IP. We can find this by applying the same filter from question 1 or 2 where the customer data and internal passwords were being transmitted. Since this internal data is going from an internal to external IP, this is a strong indicator of malicious activity. The malicious IP is **185.203.119.12**. So far, out filter only looks like this: `ftp && ip.dst == 185.203.119.12`.
 
+The question mentions a CSV file. We saw a CSV file from our previous question (**internal_passwords.csv**), but if we don't know the name of the file, than all we can search for is the CSV extension. Now there's one problem with this Wireshark packet capture - it seems that only the USER command was parsed as an actual **FTP** command. That's why when we try to apply **PASS** or **STOR** as a column, the column gets created like so:
+
+<img width="84" height="309" alt="image" src="https://github.com/user-attachments/assets/e0eeba8f-49a1-45b0-ba99-f5bbd7cfdbb2" />
+
+That just means that text does exist there. We also can't filter on **PASS** or **STOR**. Instead, it applies a raw byte comparison at a fixed offset inside the frame.
+
+<img width="1914" height="803" alt="image" src="https://github.com/user-attachments/assets/5e8f5fc0-c57a-4ac5-a63e-15d10c761b50" />
+
+Parsed commands should look like this:
+
+<img width="207" height="49" alt="image" src="https://github.com/user-attachments/assets/6d935100-bf27-4b0f-baa3-55c1c17e1bd9" />
+
+So what can we do? We can actually do a keyword search against the whole FTP part of the packet itself: `ip.dst == 185.203.119.12 && ftp contains "STOR" && ftp contains ".csv"`. This will return all **CSV** file transfers to the malicious IP. Then we just add our flag filter to it `ip.dst == 185.203.119.12 && ftp contains "STOR" && ftp contains ".csv" && ftp contains "THM"`. This will reveal the flag. You could also just simply use `ftp contains "THM"` as the filter to begin with, but in a real environment, you often go through a process of elimination, especially if you don't know the exact values you're looking for. If you wanted to go about this in an even more relistic way, you would use a regex match instead based on the structure of the flag and number of characters (if known).
+```
+ip.dst == 185.203.119.12 && ftp contains "STOR" && ftp contains ".csv" && ftp matches "[A-Za-z0-9]{3}\\{[A-Za-z0-9_]{21}\\}"
+```
+
+**Answer**: THM{ftp_exfil_hidden_flag}
