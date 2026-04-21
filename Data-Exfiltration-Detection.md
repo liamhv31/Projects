@@ -151,3 +151,24 @@ ip.dst == 185.203.119.12 && ftp contains "STOR" && ftp contains ".csv" && ftp ma
 ```
 
 **Answer**: THM{ftp_exfil_hidden_flag}
+
+## Detection: Data Exfil via HTTP
+
+### Question 1 - Which internal compromised host was used to exfiltrate this sensitive data?
+
+#### Wireshark
+The problem with just diving into Wireshark to identify the compromised host is that the host is usually already identified via the detection/alert that was triggered on the SIEM/security platform beforehand. Wireshark is not for detection, it's for deeper investigation after the alert (and if it warrants further investigation). This makes it difficult to identify the answer to this question because now we need to make some assumptions as to _what could have_ the detection been that alerted to potential data exfiltration. There are several potential indicators for data exfiltration via HTTP, and Wireshark can't be used to effectively detect all, so we will need to start with the basics.
+
+_Typically_, HTTP data exfiltration is performed using the POST method (sending data to an external server). Attackers can also hide encoded data within GET requests, but POST is more common. So our filter will start like this:
+```
+http.request.method == "POST"
+```
+This returns about 50% of tha packet capture, which is still a bit too large to look through. The next thing we can do is try filtering all packets with a frame langth below a certain number. If we sort packets by frame length in descending order, we can see that they range steadily from about 400 to 565, with one outlier with a frame length of 782. That's quite the outlier actually, so we can just look at this packet to see why.
+
+If we expand the **Hypertext Transfer Protocol** tree abd click on Data, we can see that there was 654 bytes of uploaded data in this request, and we can see the transferred, cleartext data on the right hand side.
+
+<img width="1568" height="388" alt="image" src="https://github.com/user-attachments/assets/8684dcbc-586c-47d5-a7e3-e27ddd803b6f" />
+
+The data shows things like "Internal Access Credentials - Finance Department", a username, password, and some incident repsonse notes for an HTTP POST alert. We can actually even see the flag for the next question if we scroll down a little bit. This is definitely the compromised host sending data.
+
+### Question 2 - What's the flag hidden inside the exfiltrated data?
