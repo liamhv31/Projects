@@ -1,4 +1,4 @@
-## Detection: Data Exfil Through DNS Tunneling
+<img width="1579" height="838" alt="image" src="https://github.com/user-attachments/assets/e253d678-2e86-4c35-bab2-761c469bf2d2" />## Detection: Data Exfil Through DNS Tunneling
 
 ### Question 1 - What is the suspicious domain receiving the DNS traffic?
 
@@ -157,7 +157,7 @@ ip.dst == 185.203.119.12 && ftp contains "STOR" && ftp contains ".csv" && ftp ma
 ### Question 1 - Which internal compromised host was used to exfiltrate this sensitive data?
 
 #### Wireshark
-The problem with just diving into Wireshark to identify the compromised host is that the host is usually already identified via the detection/alert that was triggered on the SIEM/security platform beforehand. Wireshark is not for detection, it's for deeper investigation after the alert (and if it warrants further investigation). This makes it difficult to identify the answer to this question because now we need to make some assumptions as to _what could have_ the detection been that alerted to potential data exfiltration. There are several potential indicators for data exfiltration via HTTP, and Wireshark can't be used to effectively detect all, so we will need to start with the basics.
+The problem with just diving into Wireshark to identify the compromised host is that the host is usually already identified via the detection/alert that was triggered on the SIEM/security platform beforehand. Wireshark is not for detection, it's for deeper investigation after the alert (and if it warrants further investigation). This makes it difficult to identify the answer to this question because now we need to make some assumptions as to _what could have_ the detection been that alerted to potential data exfiltration. There are several potential indicators for data exfiltration via HTTP, and Wireshark can't be used to effectively detect (not identify) all, so we will need to start with the basics.
 
 _Typically_, HTTP data exfiltration is performed using the POST method (sending data to an external server). Attackers can also hide encoded data within GET requests, but POST is more common. So our filter will start like this:
 ```
@@ -165,10 +165,29 @@ http.request.method == "POST"
 ```
 This returns about 50% of tha packet capture, which is still a bit too large to look through. The next thing we can do is try filtering all packets with a frame langth below a certain number. If we sort packets by frame length in descending order, we can see that they range steadily from about 400 to 565, with one outlier with a frame length of 782. That's quite the outlier actually, so we can just look at this packet to see why.
 
-If we expand the **Hypertext Transfer Protocol** tree abd click on Data, we can see that there was 654 bytes of uploaded data in this request, and we can see the transferred, cleartext data on the right hand side.
+If we expand the **Hypertext Transfer Protocol** tree and click on **Data**, we can see that there was **654 bytes** of uploaded data in this request, and we can see the transferred, cleartext data on the right hand side.
 
 <img width="1568" height="388" alt="image" src="https://github.com/user-attachments/assets/8684dcbc-586c-47d5-a7e3-e27ddd803b6f" />
 
 The data shows things like "Internal Access Credentials - Finance Department", a username, password, and some incident repsonse notes for an HTTP POST alert. We can actually even see the flag for the next question if we scroll down a little bit. This is definitely the compromised host sending data.
 
+#### Splunk
+In this part of the lab we have data in Splunk under `index=data_exfil sourcetype="http_logs"`. Next we want to return **POST** requests only.
+```
+index=data_exfil sourcetype="http_logs" method=POST
+```
+
+**Answer**: 192.168.1.103
+
 ### Question 2 - What's the flag hidden inside the exfiltrated data?
+We can see the flag in the data of our previous answer. Let's assume we don't though. You can use regex like we did in question four in the previous section of this lab to find it if it's been parsed (which it has). You can also use the **Edit** &rarr; **Find Packet** search for regex matching or string searching if you know enough of the thing you're looking for (in this case we're looking for a string that starts with "THM").
+
+It looks like there's actually a second flag! This one isn't the right one since it 1) Isn't coming from the compromised khost we identified previously; 2) The flag is too short for the flag the question is expecting; and 3) This packet doesn't show as strong of data exfiltration signals as the other packet. It's only a frame length of 120, it uses the GET method, and there's no data in the HTTP part of the packet being exfiltrated that we can see.
+
+<img width="1579" height="687" alt="image" src="https://github.com/user-attachments/assets/bd55867a-1267-4a58-99d0-d97a2a013cd1" />
+
+Real answer:
+
+<img width="1579" height="838" alt="image" src="https://github.com/user-attachments/assets/3b1ad907-44e7-41f4-a15d-b1aaa565cbe7" />
+
+**Answer**: THM{http_raw_3xf1ltr4t10n_succ3ss}
