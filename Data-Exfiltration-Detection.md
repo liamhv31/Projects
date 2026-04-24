@@ -176,6 +176,28 @@ In this part of the lab we have data in Splunk under `index=data_exfil sourcetyp
 ```
 index=data_exfil sourcetype="http_logs" method=POST
 ```
+We can follow the same pattern we used with Wireshark - sorting by the number of bytes sent from most to least.
+```
+index=data_exfil sourcetype="http_logs" method=POST
+| table _time src_ip dest_ip method bytes_sent
+| sort - bytes_sent
+```
+We can see the outlier at the top, and the compromised host.
+
+<img width="943" height="446" alt="image" src="https://github.com/user-attachments/assets/5c4f147b-f120-40d9-830d-372cc8f9139f" />
+
+If you're creating a detection that uses bytes sent as an indicator, start by finding the 95th percentiale of bytes sent and trigger only when the number of bytes sent is above that threshold.
+```
+index=data_exfil sourcetype="http_logs" method=POST
+| eventstats perc95(bytes_sent) as p95_bytes_sent
+| where bytes_sent >= p95_bytes_sent
+| table _time src_ip dest_ip method bytes_sent p95_bytes_sent
+| sort - bytes_sent
+```
+
+<img width="952" height="584" alt="image" src="https://github.com/user-attachments/assets/bbc69f22-1000-4d7c-9e63-87e73788c887" />
+
+Splunk actually has a function called `perc95()`. The `eventstats` keyword allows us to use that function and also adds the new field to every event. We can see that the number of bytes sent in the 95th percentile is greater than ~441. This returns a lot of hits, so you can tweak it further to reduce noise/false positives. In this case, I would probably start with any events with 500 or more bytes transferred.
 
 **Answer**: 192.168.1.103
 
