@@ -1,4 +1,4 @@
-<img width="1579" height="838" alt="image" src="https://github.com/user-attachments/assets/e253d678-2e86-4c35-bab2-761c469bf2d2" />## Detection: Data Exfil Through DNS Tunneling
+## Detection: Data Exfil through DNS Tunneling
 
 ### Question 1 - What is the suspicious domain receiving the DNS traffic?
 
