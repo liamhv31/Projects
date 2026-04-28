@@ -89,7 +89,7 @@ index=data_exfil sourcetype="dns_logs"
 
 **Answer**: 192.168.1.103
 
-## Detection: Data Exfil Through FTP
+## Detection: Data Exfil through FTP
 **Note**: The FTP part of the lab will not involve Splunk since there is no FTP data in this Splunk instance
 
 ### Question 1 - How many connections were observed from the guest account?
@@ -152,7 +152,7 @@ ip.dst == 185.203.119.12 && ftp contains "STOR" && ftp contains ".csv" && ftp ma
 
 **Answer**: THM{ftp_exfil_hidden_flag}
 
-## Detection: Data Exfil via HTTP
+## Detection: Data Exfil through HTTP
 
 ### Question 1 - Which internal compromised host was used to exfiltrate this sensitive data?
 
@@ -213,3 +213,7 @@ Real answer:
 <img width="1579" height="838" alt="image" src="https://github.com/user-attachments/assets/3b1ad907-44e7-41f4-a15d-b1aaa565cbe7" />
 
 **Answer**: THM{http_raw_3xf1ltr4t10n_succ3ss}
+
+## Detection: Data Exfil through ICMP
+
+### Question 1 - What is the flag found in the exfiltrated data through ICMP?
