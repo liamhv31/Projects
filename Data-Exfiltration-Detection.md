@@ -14,7 +14,7 @@ This is just one indicator to filter by. In real scenarios, you will likely need
 ```
 dns.qry.name matches "^[a-zA-Z0-9]{15,}\\..+\\..+"
 ```
-This query returns us some high-entropy domain names. Another important thing to note is that in real DNS tunneling or beaconing scenarios, the destination may be a public DNS server like Google (8.8.8.8), Quad9 (9.9.9.9), or Cloudflare (1.1.1.1). Though I would only search for this directly if this aligns with a specific threat actor's TTPs. In the screenshot below, we can also see that the domain name remains the same, but the subdomain is always a different, high-entropy value. This is another strong DNS tunneling indicator.
+This query returns us some high-entropy domain names. Another important thing to note is that in DNS tunneling or beaconing scenarios, the destination may be a public DNS server like Google (8.8.8.8), Quad9 (9.9.9.9), or Cloudflare (1.1.1.1). Depending on network architecture, it could also be an internal DNS resolver. Though I would only search for this directly if this aligns with a specific threat actor's TTPs. In the screenshot below, we can also see that the domain name remains the same, but the subdomain is always a different, high-entropy value. This is another strong DNS tunneling indicator.
 
 <img width="1596" height="524" alt="image" src="https://github.com/user-attachments/assets/33b568dc-1ffc-464a-8cd7-3eb0416fea94" />
 
