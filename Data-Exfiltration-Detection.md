@@ -228,7 +228,7 @@ Port: 5432
 User: db_reader
 Password: R3@d0nly!2025
 ```
-The name of the server and username suggests that this is a database of some sort, and the port being 5432 *the official default TCP port for PostgreSQL) confirms that.
+The name of the server and username suggests that this is a database of some sort, and the port being 5432 (the official default TCP port for PostgreSQL) confirms that.
 
 <img width="1576" height="608" alt="image" src="https://github.com/user-attachments/assets/34cb3658-56f9-4404-8c4a-e0ba57ec8160" />
 
