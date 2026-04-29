@@ -1,3 +1,6 @@
+## Overview
+This lab focuses on identifying and investigating multiple methods of data exfiltration using both Wireshark and Splunk. Techniques covered include DNS tunneling, FTP file transfers, HTTP POST uploads, and ICMP payload abuse, with an emphasis on filtering suspicious traffic, analyzing packet contents, and validating findings through log searches. The objective is to demonstrate practical detection and investigative workflows for uncovering unauthorized data movement across common network protocols.
+
 ## Detection: Data Exfil through DNS Tunneling
 
 ### Question 1 - What is the suspicious domain receiving the DNS traffic?
@@ -7,7 +10,7 @@ In large packet captures, we need to start by narrowing down our search. First o
 ```
 dns.qry.name matches "^[^.]+\\..+\\..+"
 ```
-This is just one indicator to filter by. In real scenarios you will likely need to filter by a few different indicators to remove false positives. You can further narrow it down by looking for high entropy or base32/base64-like patterns in the query name. This is where things get difficult in Wireshark, as it cannot calculate entropy. Additionally, if the subdomain doesn't follow conventional base32, base64, or something else, and you try filtering on those standard conventions, then you may miss malicious DNS queries. Outside of a SIEM or some custom scripting, your next best option is to filter based on subdomain length and prescense.
+This is just one indicator to filter by. In real scenarios, you will likely need to filter using several different indicators to remove false positives. You can further narrow it down by looking for high entropy or base32/base64-like patterns in the query name. This is where things get difficult in Wireshark, as it cannot calculate entropy. Additionally, if the subdomain doesn't follow conventional base32, base64, or something else, and you try filtering on those standard conventions, then you may miss malicious DNS queries. Outside of a SIEM or some custom scripting, your next best option is to filter based on subdomain length and presence.
 ```
 dns.qry.name matches "^[a-zA-Z0-9]{15,}\\..+\\..+"
 ```
@@ -16,12 +19,12 @@ This query returns us some high-entropy domain names. Another important thing to
 <img width="1596" height="524" alt="image" src="https://github.com/user-attachments/assets/33b568dc-1ffc-464a-8cd7-3eb0416fea94" />
 
 #### Splunk
-This job is made easier in Splunk, though potentially less verbose in terms of logging depending on what is being ingested (likely not every packets detail). Ease of use will also largely depend on field mapping. In this case, the index and sourcetype will be: `index=data_exfil sourcetype="dns_logs"`. The full query will look like this:
+This task is easier in Splunk, though logging may be less verbose depending on what data is being ingested (likely not every packet detail). Ease of use will also largely depend on field mapping. In this case, the index and sourcetype will be: `index=data_exfil sourcetype="dns_logs"`. The full query will look like this:
 ```
 index=data_exfil sourcetype="dns_logs"
 | regex query="^[a-zA-Z0-9]{15,}\..+\..+"
 ```
-Splunk uses standard regex, so there's no need to double escape like in Wireshark. This will return us the same results, but this is not the most efficient method to find our answer. What if there are tens of thousands of events like in a real enterprise environment? We want to return a count of all unique domains that match our criteria, and strip the subdomain so we don't return the same domain hundreds or thousands of times. This is what our new query will look like:
+Splunk uses standard regex, so there's no need to double escape like in Wireshark. This will return us the same results, but this is not the most efficient method to find our answer. But what if there are tens of thousands of events, like in a real enterprise environment? We want to return a count of all unique domains that match our criteria, and strip the subdomain so we don't return the same domain hundreds or thousands of times. This is what our new query will look like:
 ```
 index=data_exfil sourcetype="dns_logs"
 | regex query="^[a-zA-Z0-9]{15,}\..+\..+"
@@ -32,7 +35,7 @@ index=data_exfil sourcetype="dns_logs"
 - `eval` is used to create or modify fields using expressions. So we're creating a new field (`base_domain`)
 - `replace(query, "^[^.]+\.", "")` replaces the first domain from `query` and assigns what's left to our new variable. E.g., `ve3u2ryv8o23f387.tunnelcorp.net` will become `tunnelcorp.net`
 
-This approach has one issue though, multi-subdomain queries will break this logic. If we have something like `foo.bar.website.com` we would get `bar.website.com`. Not terrible, but it could produce unintended results. Another version would be to account for multi TLDs. E.g., co.uk, com.au, com.mx, etc:
+This approach has one issue, though: multi-subdomain queries will break this logic. If we have something like `foo.bar.website.com` we would get `bar.website.com`. Not terrible, but it could produce unintended results. Another version would be to account for multi TLDs. E.g., co.uk, com.au, com.mx, etc:
 ```
 index=data_exfil sourcetype="dns_logs"
 | regex query="^[a-zA-Z0-9]{15,}\..+\..+"
@@ -40,7 +43,7 @@ index=data_exfil sourcetype="dns_logs"
 | stats count by base_domain
 | sort -count
 ```
-This will allow us to match both something like `3479fgwb8fgeq.tunnelcorp.net` and `3479fgwb8fgeq.tunnelcorp.net.uk`. This also has it's problems though. You need to now maintain a list of domain suffixes, which can cause you to miss events. This is when you would incorporate something like a lookup in Splunk to enrich your search (outside the scope of this lab).
+This will allow us to match both something like `3479fgwb8fgeq.tunnelcorp.net` and `3479fgwb8fgeq.tunnelcorp.net.uk`. This also has its problems, though. You need to now maintain a list of domain suffixes, which can cause you to miss events. This is when you would incorporate something like a lookup in Splunk to enrich your search (outside the scope of this lab).
 
 **Answer**: tunnelcorp.net
 
@@ -70,7 +73,7 @@ To find the answer to this question, we can use the **Statistics** --> **Endpoin
 
 <img width="1514" height="616" alt="image" src="https://github.com/user-attachments/assets/ac210f8a-6414-4147-a73d-821c6731080b" />
 
-We can see that the top IP is the Google DNS server (8.8.8.8). We're looking for an internal, corporate, or pvivate IP, so this is not the answer. The next IP with the most packets (72) is our answer.
+We can see that the top IP is the Google DNS server (8.8.8.8). We're looking for an internal, corporate, or private IP address, so this is not the answer. The next IP with the most packets (72) is our answer.
 
 #### Splunk
 In Splunk, there are two ways to do this - the easy way, or the better way. The easy way would be to just click on the `src_ip` field after running your query and looking at what the top IP is.
@@ -105,7 +108,7 @@ ftp.request.command == "USER" && ftp.request.arg == "guest"
 **Answer**: 5
 
 ### Question 2 - What is the name of the customer-related file exfiltrated from the root account?
-We just need to modify the previous query to return events for the `root` account instead of `guest`.
+We simply need to modify the previous query to return events for the `root` account instead of `guest`.
 ```
 ftp.request.command == "USER" && ftp.request.arg == "root"
 ```
@@ -113,12 +116,12 @@ If you select each packet and expand the FTP tree, you can see the `STOR` (uploa
 
 <img width="647" height="157" alt="image" src="https://github.com/user-attachments/assets/09a2c0c8-ea16-4446-bed0-d62dc1e85b45" />
 
-There's also another file being transferred from `root` called `internal_passwords.csv` but the question is asking for the **customer-related file**. We can't see the contents but judging off name alone, this file would not be the answer.
+There's also another file being transferred from `root` called `internal_passwords.csv` but the question is asking for the **customer-related file**. We can't see the contents, but judging by the name alone, this file would not be the answer.
 
 **Answer**: customer_data.xlsx
 
 ### Question 3 - Which internal IP was found to be sending the largest payload to an external IP?
-There are a couple different ways we can go about this. First, let's apply a filter where we only return packets where the traffic is FTP and only internal-to-external. Wireshark allows subnet searches.
+There are a couple of different ways we can approach this. First, let's apply a filter where we only return packets where the traffic is FTP and only internal-to-external. Wireshark allows subnet searches.
 ```
 ftp && (ip.src == 192.168.0.0/16 or ip.src == 10.0.0.0/8 or ip.src == 172.16.0.0/12) and !(ip.dst == 10.0.0.0/8 or ip.dst == 172.16.0.0/12 or ip.dst == 192.168.0.0/16)
 ```
@@ -131,9 +134,9 @@ You can also use the **Statistics** &rarr; **Endpoints** feature, but this will 
 **Answer**: 192.168.1.105
 
 ### Question 4 - What is the flag hidden inside the ftp stream transferring the CSV file to the suspicious IP?
-The first thing we need to do is identify the suspicious IP. We can find this by applying the same filter from question 1 or 2 where the customer data and internal passwords were being transmitted. Since this internal data is going from an internal to external IP, this is a strong indicator of malicious activity. The malicious IP is **185.203.119.12**. So far, out filter only looks like this: `ftp && ip.dst == 185.203.119.12`.
+The first thing we need to do is identify the suspicious IP address. We can find this by applying the same filter from question 1 or 2 where the customer data and internal passwords were being transmitted. Since this internal data is going from an internal to external IP, this is a strong indicator of malicious activity. The malicious IP is **185.203.119.12**. So far, out filter only looks like this: `ftp && ip.dst == 185.203.119.12`.
 
-The question mentions a CSV file. We saw a CSV file from our previous question (**internal_passwords.csv**), but if we don't know the name of the file, than all we can search for is the CSV extension. Now there's one problem with this Wireshark packet capture - it seems that only the USER command was parsed as an actual **FTP** command. That's why when we try to apply **PASS** or **STOR** as a column, the column gets created like so:
+The question mentions a CSV file. We saw a CSV file from our previous question (**internal_passwords.csv**), but if we don't know the name of the file, then all we can search for is the CSV extension. Now there's one problem with this Wireshark packet capture. It appears that only the USER command was parsed as an actual FTP command. That's why when we try to apply **PASS** or **STOR** as a column, the column gets created like so:
 
 <img width="84" height="309" alt="image" src="https://github.com/user-attachments/assets/e0eeba8f-49a1-45b0-ba99-f5bbd7cfdbb2" />
 
@@ -145,7 +148,7 @@ Parsed commands should look like this:
 
 <img width="207" height="49" alt="image" src="https://github.com/user-attachments/assets/6d935100-bf27-4b0f-baa3-55c1c17e1bd9" />
 
-So what can we do? We can actually do a keyword search against the whole FTP part of the packet itself: `ip.dst == 185.203.119.12 && ftp contains "STOR" && ftp contains ".csv"`. This will return all **CSV** file transfers to the malicious IP. Then we just add our flag filter to it `ip.dst == 185.203.119.12 && ftp contains "STOR" && ftp contains ".csv" && ftp contains "THM"`. This will reveal the flag. You could also just simply use `ftp contains "THM"` as the filter to begin with, but in a real environment, you often go through a process of elimination, especially if you don't know the exact values you're looking for. If you wanted to go about this in an even more relistic way, you would use a regex match instead based on the structure of the flag and number of characters (if known).
+So what can we do? We can actually do a keyword search against the whole FTP part of the packet itself: `ip.dst == 185.203.119.12 && ftp contains "STOR" && ftp contains ".csv"`. This will return all **CSV** file transfers to the malicious IP. Then we just add our flag filter to it `ip.dst == 185.203.119.12 && ftp contains "STOR" && ftp contains ".csv" && ftp contains "THM"`. This will reveal the flag. You could also simply use `ftp contains "THM"` as the filter to begin with, but in a real environment, you often go through a process of elimination, especially if you don't know the exact values you're looking for. If you wanted to go about this in an even more relistic way, you would use a regex match instead based on the structure of the flag and number of characters (if known).
 ```
 ip.dst == 185.203.119.12 && ftp contains "STOR" && ftp contains ".csv" && ftp matches "[A-Za-z0-9]{3}\\{[A-Za-z0-9_]{21}\\}"
 ```
@@ -157,19 +160,19 @@ ip.dst == 185.203.119.12 && ftp contains "STOR" && ftp contains ".csv" && ftp ma
 ### Question 1 - Which internal compromised host was used to exfiltrate this sensitive data?
 
 #### Wireshark
-The problem with just diving into Wireshark to identify the compromised host is that the host is usually already identified via the detection/alert that was triggered on the SIEM/security platform beforehand. Wireshark is not for detection, it's for deeper investigation after the alert (and if it warrants further investigation). This makes it difficult to identify the answer to this question because now we need to make some assumptions as to _what could have_ the detection been that alerted to potential data exfiltration. There are several potential indicators for data exfiltration via HTTP, and Wireshark can't be used to effectively detect (not identify) all, so we will need to start with the basics.
+The problem with immediately diving into Wireshark to identify the compromised host is that the host is usually already identified via the detection/alert that was triggered on the SIEM/security platform beforehand. Wireshark is not primarily for detection; it's for deeper investigation after the alert (and if it warrants further investigation). This makes it difficult to identify the answer to this question because now we need to make some assumptions as to _what could have_ the detection been that alerted to potential data exfiltration. There are several indicators of HTTP data exfiltration, and Wireshark cannot effectively detect (not identify) all of them. We will need to start with the basics.
 
 _Typically_, HTTP data exfiltration is performed using the POST method (sending data to an external server). Attackers can also hide encoded data within GET requests, but POST is more common. So our filter will start like this:
 ```
 http.request.method == "POST"
 ```
-This returns about 50% of tha packet capture, which is still a bit too large to look through. The next thing we can do is try filtering all packets with a frame langth below a certain number. If we sort packets by frame length in descending order, we can see that they range steadily from about 400 to 565, with one outlier with a frame length of 782. That's quite the outlier actually, so we can just look at this packet to see why.
+This returns about 50% of the packet capture, which is still a bit too large to look through. The next thing we can do is try filtering all packets with a frame length below a certain number. If we sort packets by frame length in descending order, we can see that they range steadily from about 400 to 565, with one outlier with a frame length of 782. That's quite the outlier actually, so we can just look at this packet to see why.
 
 If we expand the **Hypertext Transfer Protocol** tree and click on **Data**, we can see that there was **654 bytes** of uploaded data in this request, and we can see the transferred, cleartext data on the right hand side.
 
 <img width="1568" height="388" alt="image" src="https://github.com/user-attachments/assets/8684dcbc-586c-47d5-a7e3-e27ddd803b6f" />
 
-The data shows things like "Internal Access Credentials - Finance Department", a username, password, and some incident repsonse notes for an HTTP POST alert. We can actually even see the flag for the next question if we scroll down a little bit. This is definitely the compromised host sending data.
+The data shows things like "Internal Access Credentials - Finance Department", a username, password, and some incident response notes for an HTTP POST alert. We can actually even see the flag for the next question if we scroll down a little bit. This is almost certainly the compromised host sending the data.
 
 #### Splunk
 In this part of the lab we have data in Splunk under `index=data_exfil sourcetype="http_logs"`. Next we want to return **POST** requests only.
@@ -204,7 +207,7 @@ Splunk actually has a function called `perc95()`. The `eventstats` keyword allow
 ### Question 2 - What's the flag hidden inside the exfiltrated data?
 We can see the flag in the data of our previous answer. Let's assume we don't though. You can use regex like we did in question four in the previous section of this lab to find it if it's been parsed (which it has). You can also use the **Edit** &rarr; **Find Packet** search for regex matching or string searching if you know enough of the thing you're looking for (in this case we're looking for a string that starts with "THM").
 
-It looks like there's actually a second flag! This one isn't the right one since it 1) Isn't coming from the compromised khost we identified previously; 2) The flag is too short for the flag the question is expecting; and 3) This packet doesn't show as strong of data exfiltration signals as the other packet. It's only a frame length of 120, it uses the GET method, and there's no data in the HTTP part of the packet being exfiltrated that we can see.
+It appears there is actually a second flag! This one isn't the right one since it 1) Isn't coming from the compromised host we identified previously; 2) The flag is too short for the flag the question is expecting; and 3) This packet doesn't show as strong of data exfiltration signals as the other packet. It's only a frame length of 120, it uses the GET method, and there's no data in the HTTP part of the packet being exfiltrated that we can see.
 
 <img width="1579" height="687" alt="image" src="https://github.com/user-attachments/assets/bd55867a-1267-4a58-99d0-d97a2a013cd1" />
 
@@ -217,7 +220,7 @@ Real answer:
 ## Detection: Data Exfil through ICMP
 
 ### Question 1 - What is the flag found in the exfiltrated data through ICMP?
-Using Wireshark, we need to find ICMP packets that contain exfiltrated data. One technique we can look for is encoded data inside ICMP echo requests. ICMP echo requests can have up to 64 bytes (depedning on the operating system), so we can start by looking for anything above that.
+Using Wireshark, we need to find ICMP packets that contain exfiltrated data. One technique we can look for is encoded data inside ICMP echo requests. ICMP echo requests can have up to 64 bytes (depending on the operating system), so we can start by looking for anything above that.
 ```
 icmp.type==8 && frame.len > 64
 ```
@@ -232,7 +235,7 @@ The name of the server and username suggests that this is a database of some sor
 
 <img width="1576" height="608" alt="image" src="https://github.com/user-attachments/assets/34cb3658-56f9-4404-8c4a-e0ba57ec8160" />
 
-The next packet contains data too. This time it looks like an SSH key fringerprint, and possibly the start of a datase connection string, though it is not actually present. There's also another host present.
+The next packet contains data too. This time it looks like an SSH key fingerprint, and possibly the start of a database connection string, though it is not actually present. There's also another host present.
 ```
 rpnet.local
 SSH Key Fingerprint: SHA256:9f:3a:2b:7c:1d:8e:4f:aa:bb:cc:dd:ee:ff:00:11:22
