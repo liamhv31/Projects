@@ -217,3 +217,32 @@ Real answer:
 ## Detection: Data Exfil through ICMP
 
 ### Question 1 - What is the flag found in the exfiltrated data through ICMP?
+Using Wireshark, we need to find ICMP packets that contain exfiltrated data. One technique we can look for is encoded data inside ICMP echo requests. ICMP echo requests can have up to 64 bytes (depedning on the operating system), so we can start by looking for anything above that.
+```
+icmp.type==8 && frame.len > 64
+```
+We can see 6 packets, most of which being far higher than 64 bytes. If we look at the first one, it has 148 bytes. The IP is a private IP range, so the request isn't being sent externally, rather locally on the same network. Clicking on **Data** under the **Internet Control Message Protocol** tree shows some encoded data (in hex) that was attached to this echo request. This shows the following:
+```
+db01.internal.corp
+Port: 5432
+User: db_reader
+Password: R3@d0nly!2025
+```
+The name of the server and username suggests that this is a database of some sort, and the port being 5432 *the official default TCP port for PostgreSQL) confirms that.
+
+<img width="1576" height="608" alt="image" src="https://github.com/user-attachments/assets/34cb3658-56f9-4404-8c4a-e0ba57ec8160" />
+
+The next packet contains data too. This time it looks like an SSH key fringerprint, and possibly the start of a datase connection string, though it is not actually present. There's also another host present.
+```
+rpnet.local
+SSH Key Fingerprint: SHA256:9f:3a:2b:7c:1d:8e:4f:aa:bb:cc:dd:ee:ff:00:11:22
+Database Connection:
+```
+
+<img width="1572" height="607" alt="image" src="https://github.com/user-attachments/assets/af267555-0586-44d1-8f94-0ef56e90efb1" />
+
+If we continue to look at each packet, all of them have data encoded into the echo request. We need to find a flag with the format: `THM{.*}` We can search for `THM by doing a packet search against the packet bytes.
+
+<img width="1575" height="627" alt="image" src="https://github.com/user-attachments/assets/c10f8fc2-5543-4b83-b360-aab0611d8d7e" />
+
+**Answer**: THM{1cmp_3ch0_3xf1ltr4t10n_succ3sss}
