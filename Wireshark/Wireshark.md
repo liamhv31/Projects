@@ -38,8 +38,21 @@ The PowerShell equivalent to this on Windows would be `Get-FileHash .\Exercise.p
 **Answer**: f446de335565fb0b0ee5e5a3266703c778b2f3dfad7efeaeccb2da5641a6d6eb
 
 ### Question 4 - View packet number 38. Which markup language is used under the HTTP protocol?
+You can filter by packet number with the following query: `frame.number == 38`. You can also filter by packet numbers in the following ways:
+- Return multiple packets: `frame.number in {1 2 3}`
+- Return a range of packets: `frame.number >= 1 && frame.number <= 10`
+- Return everything except a specific packet(s): `frame.number != 2`
+
+Once the packet is returned, select it, then there should be a portion of the packet that says **eXtensible Markup Language**, or more commonly referred to - **XML**. This is an HTTP packet that contains XML body/content. You may also notice this in the packet details pane: `[14 Reassembled TCP Segments (18364 bytes)]`. That suggests that the XML content was likely too large to fit into a single TCP packet, so it had to be reassmebled.
+
+<img width="954" height="793" alt="image" src="https://github.com/user-attachments/assets/6d4c353e-5aed-4964-8d80-5c200739d55d" />
+
+**Answer**: eXtensible Markup Language
 
 ### Question 5 - What is the arrival date of the packet?
+The arrival date and time is stored in the frame metadata of the packet. Look for the `Arrival Time` field. This represents when the packet was captured by the device running Wireshark. There are a few other date/time related fields within the frame metadata:
+- `[Time shift for this packet: 0.000000000 seconds]` - This will show if a manual timestamp adjustment has been appied to the packet. Wireshark will actually let you shift packet timestamps forward or backwords. This can be helpful for these like synchronizing multiple captures, correcting clock drift, or compensating for incorrect system times
+- `Epoch Time: 1084443432.158193000 seconds` - Wireshark also shows the time in **Epoch**
 
 ### Question 6 - What is the TTL value?
 
