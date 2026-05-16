@@ -52,7 +52,14 @@ Once the packet is returned, select it, then there should be a portion of the pa
 ### Question 5 - What is the arrival date of the packet?
 The arrival date and time is stored in the frame metadata of the packet. Look for the `Arrival Time` field. This represents when the packet was captured by the device running Wireshark. There are a few other date/time related fields within the frame metadata:
 - `[Time shift for this packet: 0.000000000 seconds]` - This will show if a manual timestamp adjustment has been appied to the packet. Wireshark will actually let you shift packet timestamps forward or backwords. This can be helpful for these like synchronizing multiple captures, correcting clock drift, or compensating for incorrect system times
-- `Epoch Time: 1084443432.158193000 seconds` - Wireshark also shows the time in **Epoch**
+- `Epoch Time: 1084443432.158193000 seconds` - Wireshark also shows the time in **Epoch**, which is a way of tracking time as a single, continuous number (seconds) since January 1, 1970, at 00:00:00.
+- `[Time delta from previous captured frame: 0.070101000 seconds]` - This is the time passed since the previous packet (number 37) was captured
+- `[Time delta from previous displayed frame: 0.000000000 seconds]` - This is the time difference between the currently selected packet, and the last visible or displayed packet shown after applying a filter
+- `[Time since reference or first frame: 4.846969000 seconds]` - This is the time passed since the first packet in the capture (by default)
+
+<img width="953" height="849" alt="image" src="https://github.com/user-attachments/assets/2b8feb55-ba3b-4978-9106-bcdc9e3dec55" />
+
+**Answer**: 05/13/2004
 
 ### Question 6 - What is the TTL value?
 
