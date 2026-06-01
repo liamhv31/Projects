@@ -1,4 +1,4 @@
-<img width="850" height="599" alt="image" src="https://github.com/user-attachments/assets/faee2304-2165-4850-8802-7d206cd713c8" /><img width="850" height="599" alt="image" src="https://github.com/user-attachments/assets/9e184ac9-9f5b-4ddc-a919-3c41ac0f6577" />## The Basics
+## The Basics
 
 ### Question 1 - Read the "capture file comments". What is the flag?
 The packet capture file comments can be used to add metadata notes about the pcap. It can used to writeup anything noteworthy about the pcap file, including capture purpose, network details, discovered hosts and IPs, etc. You can find the comments by going to **Statistics** &rarr; **Capture File Properties**. The comments are at the bottom.
@@ -278,8 +278,20 @@ Since we need to find the number of a particular entity, and we know the entity 
 **Answer**: 3
 
 ### Question 16 - What is the name of the second artist?
+Now that we know how artists are identified, we can look for more information on the second artist directly by keyword searching `artist=2`. Keep paging through with the **Find Next** button until you find more information on artist 2. Eventually you will see an HTML block that has this: `<p>painted by: <a href='artists.php?artist=2'>Blad3</a></p>`.
 
+**Answer**: Blad3
 
 ## Packet Operations
+
+### Question 1 - Investigate the resolved addresses. What is the IP address of the hostname starts with "bbc"?
+
+### Question 2 - What is the number of IPv4 conversations?
+
+### Question 3 - How many bytes (k) were transferred from the "Micro-St" MAC address?
+
+### Question 4 - What is the number of IP addresses linked with "Kansas City"?
+
+### Question 5 - Which IP address is linked with "Blicnet" AS Organisation?
 
 ## Traffic Analysis
