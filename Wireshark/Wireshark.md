@@ -1,4 +1,4 @@
-## The Basics
+<img width="850" height="599" alt="image" src="https://github.com/user-attachments/assets/faee2304-2165-4850-8802-7d206cd713c8" /><img width="850" height="599" alt="image" src="https://github.com/user-attachments/assets/9e184ac9-9f5b-4ddc-a919-3c41ac0f6577" />## The Basics
 
 ### Question 1 - Read the "capture file comments". What is the flag?
 The packet capture file comments can be used to add metadata notes about the pcap. It can used to writeup anything noteworthy about the pcap file, including capture purpose, network details, discovered hosts and IPs, etc. You can find the comments by going to **Statistics** &rarr; **Capture File Properties**. The comments are at the bottom.
@@ -251,6 +251,34 @@ Content-Type: text/html; charset=ISO-8859-1
 ```
 
 **Answer**: 1636
+
+### Question 13 - Go to packet number 4. Right-click on the "Hypertext Transfer Protocol" and apply it as a filter. Now, look at the filter pane. What is the filter query?
+This is a simple demonstration of how you can quickly filter on specific things without needing to know the exact syntax. You can right-click on just about anything and apply it as a filter. This example yields the following filter: `http`. This will return all http packets in the packet capture. Another example - if you want to filter on a certain hostname you saw in an HTTP packet, you can right-click on it and add as a filter to see if this HTTP host has appeared in any other packet.
+
+<img width="1909" height="845" alt="image" src="https://github.com/user-attachments/assets/36dac2fb-2d82-47fb-ba93-09f14ff3c2a8" />
+
+Note: When you apply as a filter, it will replace the filter that is already there, not append.
+
+**Answer**: http
+
+### Question 14 - What is the number of displayed packets?
+Simply look at the number of packets returned from this filter at the bottom of the Wireshark pane.
+
+**Answer**: 1089
+
+### Question 15 - Go to packet number 33790, follow the HTTP stream, and look carefully at the responses. Looking at the web server's response, what is the total number of artists?
+We'll start by jumping to the packet we need with: `frame.number==33790`. Next we can right-click on it, go to **Follow** &rarr; **HTTP Stream**. You can also just select it then hit **Ctrl+Alt+Shift+H**. You'll notice that some of the text is red and some is blue. Red text is data sent by the client and blue text is data returned by the server. It also says at the bottom of the HTTP stream pane that there are 6 client packets and 6 server packets sent in this particular conversation.
+
+<img width="669" height="567" alt="image" src="https://github.com/user-attachments/assets/cdc7afd1-0330-4e9f-bdb3-eaa9bbaadbe0" />
+
+Since we need to find the number of a particular entity, and we know the entity name, we can search for it as a string search in the **Find** box below. This will require some manual scanning. Keep reading the response data surrounding the **artist** keyword until you find details on the number of artists. Use the **Find Next** button to page through. You will eventually find a list of artists.
+
+<img width="850" height="599" alt="image" src="https://github.com/user-attachments/assets/a93329d9-f71c-488c-affe-624dd945efc0" />
+
+**Answer**: 3
+
+### Question 16 - What is the name of the second artist?
+
 
 ## Packet Operations
 
