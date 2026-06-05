@@ -61,3 +61,54 @@ Identifying to which ASN (Autonomous System Number) an IP address belongs to als
 <img width="952" height="649" alt="image" src="https://github.com/user-attachments/assets/ebec834d-772a-4770-8cd7-4470fe506f54" />
 
 **Answer**: 188.246.82.7
+
+### Question 6 - What is the most used IPv4 destination address?
+The best and easiest way to find out which IPv4 address was the most used _destination_ address, we can use the **Endpoints** window again. Go to the **IPv4** tab and sort by either **Rx Packets** or **Rx Bytes** in descending order. This will tell you which IP recieved the most packets and bytes.
+
+<img width="1114" height="634" alt="image" src="https://github.com/user-attachments/assets/b16b13b0-60c1-4beb-b9c4-81b75d7ccda0" />
+
+**Answer**: 10.100.1.33
+
+### Question 7 - What is the max service request-response time of the DNS packets?
+There are two queries that come to mine that can give you the same answer in pretty much the same way. You can either use `dns.flags.response==1` or `dns.time` to return DNS packets. Click on one of the packets and expand the **Domain Name System** tree, then **Additional records**. Right-click on the time field and select **Apply as Column**. This will add the response time value as a column for all visible DNS packets. You can then click on the column header to sort in descending order.
+
+<img width="1918" height="849" alt="image" src="https://github.com/user-attachments/assets/a3142a82-5ed1-4fc8-bb6f-ebac84fd75f0" />
+
+**Answer**: 0.467897
+
+### Question 9 - What is the number of HTTP Requests accomplished by "rad[.]msn[.]com?
+You can achieve this a couple differnet ways. Option 1, filter the packets where the HTTP host is the one we're looking for and only return HTTP requests:
+```
+http.host==rad.msn.com && http.request
+```
+You can then see the number of returned packets at the bottom. Option 2, go to the **Statistics** &rarr; **HTTP** &rarr; **Requests** page and look for the domain name. You can then see the number of total requests.
+
+<img width="1919" height="870" alt="image" src="https://github.com/user-attachments/assets/64140362-eab1-43e1-ae15-de4844e9db79" />
+
+**Answer**: 39
+
+### Question 10 - What is the number of IP packets?
+Simply type `ip` as a filter and then look at the number of displayed packets at the bottom of the window.
+
+**Answer**: 81420
+
+### Question 11 - What is the number of packets with a "TTL value less than 10"?
+If you don't know the query, select any IP packet returned from the previous answer and expand the **Internet Protocol Version 4** tree (since TTL is part of the IP header). Right-click on the **Time to live** field and select **Apply as Filter** &rarr; **Selected**. This will produce: `ip.ttl==X` (X being the TTL of that specific packet). Then just adjust the query to return all packets with a TTL of less than 10: `ip.ttl<10`. You will now see the number of packets displayed at the bottom.
+
+**Answer** 66
+
+### Question 12 - What is the number of packets which uses "TCP port 4444"?
+Use the following filter to return the number of packets: `tcp.port==4444`
+
+**Answer**: 632
+
+### Question 13 - What is the number of "HTTP GET" requests sent to port "80"?
+Use the following filter to return the number of packets: `http.request.method=="GET" && tcp.dstport==80`. We use TCP as the transport layer protocol to return port 80 destination events since HTTP (HTTP/1.1 and HTTP/2) traditionally uses TCP. For HTTP/3 events, you may see **QUIC** (created by Google), which is a more advanced transport layer protocol built on top of UDP and essentially replaces the older TCP + TLS combination.
+
+**Answer**: 527
+
+### Question 14 - What is the number of type A DNS Queries?
+
+### Question 15 - Find all Microsoft IIS servers. What is the number of packets that did not originate from "port 80"?
+
+### Question 16 - Find all Microsoft IIS servers. What is the number of packets that have "version 7.5"?
