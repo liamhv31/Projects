@@ -285,6 +285,15 @@ Now that we know how artists are identified, we can look for more information on
 ## Packet Operations
 
 ### Question 1 - Investigate the resolved addresses. What is the IP address of the hostname starts with "bbc"?
+The **Resolved Addresses** feature shows you which IP addresses Wireshark was able to resolve to a human-readable name. This can provide more context for the conversation. You can open this view by going to **Statistics** &rarr; **Resolved Addresses**. You can search for an entry by using a minimum of three characters. You can search across all entries or choose hosts, ethernet addresses, ethernet manufacturers, or ethernet well-known addresses. 
+
+<img width="1162" height="727" alt="image" src="https://github.com/user-attachments/assets/7dd56343-c458-48da-99a8-e60ec4e667e0" />
+
+If you do not see resolved addresses, then that means you likely have the required settings disabled. Typically, you need to have **Resolve network (IP) addresses** enabled under **Edit** &rarr; **Preferences** &rarr; **Name Resolution**. This will let Wireshark translate certain IPs into human-readable names. I say "typically" because even if you have this option disabled, Wireshark can still resolve IP addresses if your capture contains DNS traffic, or if the **Resolve Physical Addresses** option is enabled.
+
+You can also select the **Use an external network name resolver** option under the same setting page which will tell Wireshark to use your DNS to resolve addresses. This will generate additional traffic from your device that's running the packet capture.
+
+**Answer**: 199.232.24.81
 
 ### Question 2 - What is the number of IPv4 conversations?
 
