@@ -331,7 +331,19 @@ We can find this by switching to the **Statistics** &rarr; **Endpoints** window.
 **Ansswer**: 7474
 
 ### Question 4 - What is the number of IP addresses linked with "Kansas City"?
+We can use the **Endpoints** window to get this answer too. Select the **Map** button on the bottom of the window, then choose **Open in browser**. Unfortunately, I wasn't able to open it myself in the provided lab machine at the time of this writeup, but you can see IPs grouped by city on a world map. Below is a reference screenshot.
+
+<img width="1637" height="537" alt="image" src="https://github.com/user-attachments/assets/15414c97-cae6-4089-87c9-ce6f695725cf" />
+
+An important note - This feature is not available in Wireshark by default. It requires supplemental geolcation data. Modern Wireshark versions supports the MaxMind GeoIP database, but it requires additional configuration.
+
+**Answer**: 4
 
 ### Question 5 - Which IP address is linked with "Blicnet" AS Organisation?
+Identifying to which ASN (Autonomous System Number) an IP address belongs to also requires GeoIP lookup. If it's configured, you can see this information in **Endpoints** window. Just select the **IPv4** tab and scroll to the right until you see **AS Organization**.
+
+<img width="952" height="649" alt="image" src="https://github.com/user-attachments/assets/ebec834d-772a-4770-8cd7-4470fe506f54" />
+
+**Answer**: 188.246.82.7
 
 ## Traffic Analysis
