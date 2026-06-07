@@ -117,7 +117,7 @@ dns.flags.response == 0 && dns.qry.type == 1
 
 <img width="170" height="105" alt="image" src="https://github.com/user-attachments/assets/a0da60a8-fa19-433f-b9e4-fcf13cd5bdd1" />
 
-- `dns.qry.type == 1` satisfies the second condition for type A records only
+- `dns.qry.type == 1` satisfies the second condition for type A records only. Type A DNS records are the most fundamental type of DNS record, and is what is responsible for mapping domain names to IP addresses.
 
 ### Question 15 - Find all Microsoft IIS servers. What is the number of packets that did not originate from "port 80"?
 
