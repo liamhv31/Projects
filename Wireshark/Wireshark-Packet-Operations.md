@@ -108,6 +108,16 @@ Use the following filter to return the number of packets: `http.request.method==
 **Answer**: 527
 
 ### Question 14 - What is the number of type A DNS Queries?
+There are two parts to this query. The first is filtering by DNS queries (reqeusts). The second is scoping it the DNS A records. We can do this with the following query:
+```
+dns.flags.response == 0 && dns.qry.type == 1
+```
+
+- `dns.flags.response == 0` satisfies our first condition. This may seem counterintuitive since we're looking for DNS queries (requests), but we're using dns.flags.**response**. This is because there is no "request" flag in the DNS header. Think of it as a question. `dns.flags.response` is basically asking 'is this packet a response?'. If yes, then the flag is set to `1`. If no, the flag is set to `0`. The DNS header contains a Query/Response (QR) bit.
+
+<img width="170" height="105" alt="image" src="https://github.com/user-attachments/assets/a0da60a8-fa19-433f-b9e4-fcf13cd5bdd1" />
+
+- `dns.qry.type == 1` satisfies the second condition for type A records only
 
 ### Question 15 - Find all Microsoft IIS servers. What is the number of packets that did not originate from "port 80"?
 
