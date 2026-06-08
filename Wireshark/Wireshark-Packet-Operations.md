@@ -139,4 +139,24 @@ dns.flags.response == 0 && dns.qry.type == 1 && !llmnr
 
 ### Question 15 - Find all Microsoft IIS servers. What is the number of packets that did not originate from "port 80"?
 
+To find the answer to this question, we first must have a basic understanding of what Microsoft IIS is. Microsoft IIS (Internet Information Services) is a web server created by Microsoft. That is the very high-level definition, and really all we need to know.
+
+Now that we know what this service is, how do we find it amongst the packets? Microsoft IIS is a **web server**, which means it will communicate using HTTP/S. There's actually a **server** field in HTTP headers, so we can use that in Wireshark to return HTTP packets that only involves a Microsoft IIS web server. We likely don't know the right format of the **server** header field value, so to ensure we find these packets, we can either do a **contains** search for **Microsoft** or **IIS**.
+```
+http.server contains "IIS"
+```
+
+This will return all HTTP packets where the **server** header field contains **IIS** in the name.
+
+<img width="1919" height="846" alt="image" src="https://github.com/user-attachments/assets/7686e45a-e38a-45d2-b8a8-def961c4b9cc" />
+
+
 ### Question 16 - Find all Microsoft IIS servers. What is the number of packets that have "version 7.5"?
+
+### Question 17 - What is the total number of packets that use ports 3333, 4444 or 9999?
+
+### Question 18 - What is the number of packets with "even TTL numbers"?
+
+### Question 19 - Change the profile to "Checksum Control". What is the number of "Bad TCP Checksum" packets?
+
+### Question 20 - Use the existing filtering button to filter the traffic. What is the number of displayed packets?
