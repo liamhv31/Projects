@@ -119,6 +119,24 @@ dns.flags.response == 0 && dns.qry.type == 1
 
 - `dns.qry.type == 1` satisfies the second condition for type A records only. Type A DNS records are the most fundamental type of DNS record, and is what is responsible for mapping domain names to IP addresses.
 
+You will notice that this doesn't just return DNS packets, but also packets using the LLMNR protocol. LLMNR (Link-Local Multicast Name Resolution) is a Microsoft name resolution protocol that looks very similar to DNS. If a host can't resolve a name through normal DNS, it uses LLMNR. Many of the same DNS fields also exist in LLMNR packets. For example, if you expand the **Link-local Multicast Name Resolution** trees, then **Queries** and all sub-trees, you can see that the LLMNR record type is A. If you right-click on the **Type** field and apply it as a filter, you will see the same filter used for DNS packets.
+
+<img width="1917" height="852" alt="image" src="https://github.com/user-attachments/assets/5904fd1f-441f-49e0-a961-0e5c4058f89b" />
+
+This is why Wireshark may return additional packets that aren't DNS. The question is specifically asking for **type A DNS queries**, which means we need to exclude the LLMNR packets. There are two ways you can do this.
+
+Specify only DNS packets (best if you _just_ want DNS):
+```
+dns.flags.response == 0 && dns.qry.type == 1 && dns
+```
+
+Filter out LLMNR packets:
+```
+dns.flags.response == 0 && dns.qry.type == 1 && !llmnr
+```
+
+**Answer**: 51
+
 ### Question 15 - Find all Microsoft IIS servers. What is the number of packets that did not originate from "port 80"?
 
 ### Question 16 - Find all Microsoft IIS servers. What is the number of packets that have "version 7.5"?
