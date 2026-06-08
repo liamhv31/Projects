@@ -138,7 +138,6 @@ dns.flags.response == 0 && dns.qry.type == 1 && !llmnr
 **Answer**: 51
 
 ### Question 15 - Find all Microsoft IIS servers. What is the number of packets that did not originate from "port 80"?
-
 To find the answer to this question, we first must have a basic understanding of what Microsoft IIS is. Microsoft IIS (Internet Information Services) is a web server created by Microsoft. That is the very high-level definition, and really all we need to know.
 
 Now that we know what this service is, how do we find it amongst the packets? Microsoft IIS is a **web server**, which means it will communicate using HTTP/S. There's actually a **server** field in HTTP headers, so we can use that in Wireshark to return HTTP packets that only involves a Microsoft IIS web server. We likely don't know the right format of the **server** header field value, so to ensure we find these packets, we can either do a **contains** search for **Microsoft** or **IIS**.
@@ -150,12 +149,47 @@ This will return all HTTP packets where the **server** header field contains **I
 
 <img width="1919" height="846" alt="image" src="https://github.com/user-attachments/assets/7686e45a-e38a-45d2-b8a8-def961c4b9cc" />
 
+Now that we know the format for the server field and how **Microsoft-IIS** appears in it, we can refine our search to make sure we don't pick up extra packets that match our contain filter, but aren't Microsoft IIS servers.
+```
+http.server contains "Microsoft-IIS"
+```
+To answer the port part of the question, we need to look at TCP since that is the transport layer protocol that HTTP primarily uses. We want packets that _didn't_ come from port 80.
+```
+http.server contains "IIS" && not tcp.srcport==80
+```
+This will return the correct number of packets. You can use the `!=` operator, but this is deprecated. It will still return the correct number of packets, but using it may return unexpected results so this is why we use the `not` operator.
+
+**Answer**: 21
 
 ### Question 16 - Find all Microsoft IIS servers. What is the number of packets that have "version 7.5"?
+If you havent noticed already, the server version is included in the **server** header field. We can use the following filter to find only version 7.5 Microsoft IIS servers.
+```
+http.server contains "Microsoft-IIS" && http.server contains "7.5"
+```
+It's a bit cleaner to use regex with the `matches` keyword instead.
+```
+http.server matches "^Microsoft-IIS\/7\.5"
+```
+
+**Answer**: 71
 
 ### Question 17 - What is the total number of packets that use ports 3333, 4444 or 9999?
+Two queries come to mind that helps answer this question. First, by just using the `||` operator.
+```
+tcp.port == 3333 || tcp.port == 4444 || tcp.port == 9999 || udp.port == 3333 || udp.port == 4444 || udp.port == 9999
+```
+The better way would be to use the `in` operator, which is a bit cleaner. This allows us to search for multiple, space separated values.
+```
+tcp.port in {3333 4444 9999} || udp.port in {3333 4444 9999}
+```
+
+**Answer**: 2235
 
 ### Question 18 - What is the number of packets with "even TTL numbers"?
+Wireshark actually allows you to use
+```
+string(ip.ttl) matches "[02468]$"
+```
 
 ### Question 19 - Change the profile to "Checksum Control". What is the number of "Bad TCP Checksum" packets?
 
