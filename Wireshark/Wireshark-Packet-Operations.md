@@ -186,11 +186,40 @@ tcp.port in {3333 4444 9999} || udp.port in {3333 4444 9999}
 **Answer**: 2235
 
 ### Question 18 - What is the number of packets with "even TTL numbers"?
-Wireshark actually allows you to use
+Wireshark actually allows you to use arithmetic functions within filters. However, you need to be running at least version 4.0. This lab only had Wireshark 3.2.3 installed. This would have allowed us to do something like: `ip.ttl % 2 == 0`. This expression uses modulo (%), which is a common arithmetic operator in programming used to see what the remainder of a division operation is. E.g., `4 % 2 = 0` since `4` can be divided by `2` evenly so there is no remainder.
+
+Since we can't use arithmetic though, we'll need to get creative. We need to find even number TTLs. Even numbers always end with a 0, 2, 4, 6, or 8. We can use this knowledge to do a regex match for any TTL value ending in one of those numbers. `ip.ttl` is an unsigned integer field type though, so we will need to cast it to a string first before performing the regex match.
 ```
 string(ip.ttl) matches "[02468]$"
 ```
+- `string()` is the Wireshark function that casts values to strings
+- `"[02468]$"` is the pattern that says match either of these numbers at the end (`$`) of the string
+
+**Answer**: 77289
 
 ### Question 19 - Change the profile to "Checksum Control". What is the number of "Bad TCP Checksum" packets?
+For this question, we need to change to the **"Checksum Control" Configuration Profile**. Configuration profiles are saved Wireshark configurations that let you quickly change your Wireshark settings without having to change multiple settings each time. E.g., certain configuration profiles may have certain packet coloring rules depending on the type of analysis you want to do.
+
+There is a built-in configuration profile called **Default**, but any others are custom. To see these profiles, go to **Edit** &rarr; **Configuration Profiles...** (or **Ctrl+Shift+A**). We can see multiple custom profiles.
+
+<img width="635" height="465" alt="image" src="https://github.com/user-attachments/assets/c2f87ccf-bb18-4d26-ac6e-301b4fdeb952" />
+
+Some are _global_ (saved in the `usr/share/wireshark/profiles` directory, and some may be _personal_ (saved in your own home directory). Select **Checksum Control** and then **Ok**. Now we need to find "Bad TCP checksums". Now there are a couple ways we can find these bad TCP checksum packets. First is by using a display filter to check the status of a TCP checksum.
+```
+tcp.checksum.status == Bad
+```
+We can also use `tcp.checksum_bad.expert`, which checks to see if there was an expert info warning or error generated for this. We can see that all of the bad packets are colored black.
+
+<img width="1916" height="334" alt="image" src="https://github.com/user-attachments/assets/b984cc70-b105-47dd-b295-17e77c2e023a" />
+
+The second approach is by looking at the **Analyze** &rarr; **Expert Information** window itself. There we can see multiple **Bad checksum** errors for TCP, IPv4, and UDP, along with the number of packets that match.
+
+<img width="571" height="433" alt="image" src="https://github.com/user-attachments/assets/7dd335f8-7452-498a-9533-e8746c923cf8" />
+
+The reason this wouldn't work in the **Default** profile is because the **Validate the TCP checksum if possible** option is disabled.
+
+<img width="416" height="272" alt="image" src="https://github.com/user-attachments/assets/1a651e63-0b1d-4c9d-91fa-88d84d1c2e31" />
+
+**Answer**: 34185
 
 ### Question 20 - Use the existing filtering button to filter the traffic. What is the number of displayed packets?
