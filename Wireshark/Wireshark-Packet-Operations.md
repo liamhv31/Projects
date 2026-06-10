@@ -223,3 +223,16 @@ The reason this wouldn't work in the **Default** profile is because the **Valida
 **Answer**: 34185
 
 ### Question 20 - Use the existing filtering button to filter the traffic. What is the number of displayed packets?
+You can configure preloaded display filters that appear as buttons for your configuration profile. Once you switch to a profile, look to the right of the display filter and you may see these filter buttons. The **Checksum Control** profile we switched to last time has one of these buttons.
+
+<img width="959" height="55" alt="image" src="https://github.com/user-attachments/assets/842f390d-358e-4cda-ae8a-0439ab111c5d" />
+
+You can see a list of enabled or disabled filter buttons in the **Edit** &rarr; **Preferences** &rarr; **Filter Buttons** menu. Creating a filter button is easy to. Let's take the `string(ip.ttl) matches "[02468]$"` filter from one of the previous questions and turn it into one. First, type your expression into the filter bar. Then click the plus icon (Add a display filter button). Give it a label and description. Hit **Ok** once you're done.
+
+<img width="960" height="92" alt="image" src="https://github.com/user-attachments/assets/4b004802-99a0-4eb5-a6d2-f0d479ff044d" />
+
+Now you'll see it appear next to the display filter! This is a great way to make common filters quickly available for specific profiles if you know you'll be performing certain kinds of packet inspection.
+
+<img width="959" height="54" alt="image" src="https://github.com/user-attachments/assets/bfa9f818-6e47-40af-bad3-e1125244495b" />
+
+**Answer**: 261
