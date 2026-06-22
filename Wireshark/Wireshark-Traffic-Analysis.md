@@ -1,6 +1,16 @@
 ## Traffic Analysis
 
 ### Question 1 - What is the total number of the "TCP Connect" scans?
+First, let's understand a TCP connect scan. This type of scan uses the TCP three-way handshake against target ports to see if they're open. For each port, the scanner starts by sending a SYN (synchronize) packet. If the port is open, it will respond with a SYN-ACK (synchronize-acknowledge) packet. The scanner then returns an ACK (acknowledge) packet which establishes a connection. Immediately after the handshake is complete, the scanner sends a RST-ACK packet to close the connection. There are a few different ways we can identify TCP connect scans in Wireshark.
+
+One way is by using the **Statistics** &rarr; **Conversations** &rarr; **TCP** menu. If you sort by the **Address A** column, you may see a single client sending TCP packets to the same host over hundreds or even thousands of different ports like we see here:
+
+<img width="1028" height="528" alt="image" src="https://github.com/user-attachments/assets/e6179bdf-a4e0-4c28-9bb3-a6221cbfa361" />
+
+You can also check the **Analyze** &rarr; **Expert Information** tab. In the screenshot below, we can see that there is an excessive number of "Warning - Connection reset (RST)" events. 2000 of them. In a capture file of about 6500 packets, that's a big clue that points towards scanning activity.
+
+<img width="804" height="111" alt="image" src="https://github.com/user-attachments/assets/b8221150-c0f2-4691-979b-bbcd36244631" />
+
 
 ### Question 2 - Which scan type is used to scan the TCP port 80?
 
