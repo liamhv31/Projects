@@ -23,7 +23,13 @@ First, what even is the TCP window size for? This is a field used by the recevie
     tcp->th_win = htons(1024); /* Who cares */
 ```
 
-Essentially this code block is saying - if the TCP window size is not specified, set it to 1024. The "Whoe cares" comment kind of tells you what the developer was thinking, the window size doesn't really matter. Since nmap isn't expecting to receive any application data (only attempting to see if the port is open), the window size doesn't matter. This does somewhat matter though because now we have a unique caharteristic that can be used to identify potential nmap traffic (if the person initiating the scanning is lazy).
+Essentially this code block is saying - if the TCP window size is not specified, set it to 1024. The "Whoe cares" comment kind of tells you what the developer was thinking, the window size doesn't really matter. Since nmap isn't expecting to receive any application data (only attempting to see if the port is open), the window size doesn't matter. This does somewhat matter though because now we have a unique caharteristic that can be used to identify potential nmap traffic (if the person initiating the scanning is lazy). The final query will look like this:
+```
+ip.src == 10.10.60.7 and tcp.flags.syn==1 and tcp.flags.ack==0 and tcp.window_size==1024
+```
+You can choose to include or not include the scanner IP, the key here is the 1024 byte TCP window size.
+
+**Answer**: 1000
 
 ### Question 2 - Which scan type is used to scan the TCP port 80?
 
