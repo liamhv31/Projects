@@ -11,6 +11,19 @@ You can also check the **Analyze** &rarr; **Expert Information** tab. In the scr
 
 <img width="804" height="111" alt="image" src="https://github.com/user-attachments/assets/b8221150-c0f2-4691-979b-bbcd36244631" />
 
+You can also try and narrow it down with a filter. It can be difficult to identify scanning activity like this sometimes since you will also return legitimate TCP connection events. The first two ways are typically better. Assuming much of this file is scanning activity, we can narrow it down like so: `tcp.flags.syn==1 and tcp.flags.ack==0`. This only shows packets where the SYN flag is set (starting a TCP connection) and excluding SYN-ACK packets, essentially only showing client to server TCP SYN events. Again, this type of activity will also show for legit TCP connections, so the results will likely be unreliable (even though the lab provides this as an example). The lab query also includes `tcp.window_size > 1024`. I see what they're trying to do here, but I believe this is a mistake, let me explain why.
+
+First, what even is the TCP window size for? This is a field used by the recevier to tell the sender how much unacknowledged data (in bytes) to transmit before expecting an ACK. Specifying the window size is a **fingerprinting** technique. This is a technique used to identify an entity by looking at one or more unique characteristics associated with that entity. In this case, that entity is **nmap**. The lab uses `nmap -sT` as the exmaple for TCP connect scans. The pcap for this lab is also located in the "nmap" directory. The biggest clue though is in how nmap handles setting the TCP window size. In [this](https://github.com/nmap/nmap/issues/2491) now closed issue in the nmap GitHub repo, the user points out how nmap sets the TCP window size.
+
+(In [nmap/tcpip.cc, line 602](https://github.com/nmap/nmap/blob/806c0af5ee008ace06dbf1623765ff97edb89e33/tcpip.cc#L602) at the time of this writeup):
+```
+  if (window)
+    tcp->th_win = htons(window);
+  else
+    tcp->th_win = htons(1024); /* Who cares */
+```
+
+Essentially this code block is saying - if the TCP window size is not specified, set it to 1024. The "Whoe cares" comment kind of tells you what the developer was thinking, the window size doesn't really matter. Since nmap isn't expecting to receive any application data (only attempting to see if the port is open), the window size doesn't matter. This does somewhat matter though because now we have a unique caharteristic that can be used to identify potential nmap traffic (if the person initiating the scanning is lazy).
 
 ### Question 2 - Which scan type is used to scan the TCP port 80?
 
