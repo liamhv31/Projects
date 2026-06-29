@@ -32,6 +32,9 @@ You can choose to include or not include the scanner IP, the key here is the def
 **Answer**: 1000
 
 ### Question 2 - Which scan type is used to scan the TCP port 80?
+This question is essentially asking: which scan type is used to check if port 80 TCP is open. This is the same scanning technique observed in the previous question. TCP connect scans identify open ports by performing a the TCP three-way handhsake.
+
+**Answer**: TCP Connect
 
 ### Question 3 - How many "UDP close port" messages are there?
 
