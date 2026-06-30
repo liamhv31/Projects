@@ -32,7 +32,24 @@ You can choose to include or not include the scanner IP, the key here is the def
 **Answer**: 1000
 
 ### Question 2 - Which scan type is used to scan the TCP port 80?
-This question is essentially asking: which scan type is used to check if port 80 TCP is open. This is the same scanning technique observed in the previous question. TCP connect scans identify open ports by performing a the TCP three-way handhsake.
+To identify the type of scan performed against a specific port, we need to analyze the packet sequence for the traffic targeting that port. Since we know the scanner IP, we can do this with the following filter: `ip.addr==10.10.60.6 and tcp.port==80`. We can see what appears to be two different conversation by looking at the packet numbers.
+
+<img width="1469" height="200" alt="image" src="https://github.com/user-attachments/assets/f3252e46-7ee2-4ee1-8447-913033620ec5" />
+
+The first four packets show the following sequence:
+```
+SYN
+SYN, ACK
+ACK
+RST, ACK
+```
+This is indicative of a TCP connect scan, since that type of scan is performed by completing the full TCP three-way handshake. The last three packets show:
+```
+SYN
+SYN, ACK
+RST, ACK
+```
+This sequence is indicative of a SYN scan since the scanner immediately terminates the connection with a `RST, ACK` after receiving an `ACK`. So this packet capture actually shows two scan types from what we can see. This question expects one answer, yet there are two. Based on the accepted answer string length, and the fact that the previous question was about TCP connect scans, we can correctly assume the answer.
 
 **Answer**: TCP Connect
 
