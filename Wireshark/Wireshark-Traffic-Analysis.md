@@ -54,6 +54,12 @@ This sequence is indicative of a SYN scan since the scanner immediately terminat
 **Answer**: TCP Connect
 
 ### Question 3 - How many "UDP close port" messages are there?
+UDP port connections don't require a three-way handshake for connection, nor is there a prompt for open ports. Closed UDP ports will _almost_ always return an **ICMP Destination Unreachable** and/or **Port Unreachable** message. I say "_almost_ always" because it depends on the device and network configuration of the receiving device:
+- **Firewalls**: Some firewalls are configured to silently **DROP** ICMP packets, instead of rejecting them (which prompts a response message). This will show an ICMP timeout for the sender.
+- **ICMP rate limiting**: Many devices introduce rate limiting for ICMP messages to prevent DDoS attacks, like those caused by **ICMP (Ping) Flood** attacks
+- **Network blocking/filtering**: Some people, like ISPs, may block ICMP packets from traversing the network to prevent network mapping or reduce overhead. E.g., Apple has been known to send packets with a very large Maximum Transmission Unit (MTU), which helps find the largest allowed packet size to reduce fragmentation, and thus connectivity latency. This is a double edged sword though, as the routers reciving these packets are possibly receving hundreds of millions of packets per second if it's a large scale telecommunications network. This means that to prevent network performance issues, some routers may have to drop these packets (even if they are legitimate), or there blocked via the firewall from reaching the network entirely.
+
+I digress. To find closed UDP ports, we can 
 
 ### Question 4 - Which UDP port in the 55-70 port range is open?
 
