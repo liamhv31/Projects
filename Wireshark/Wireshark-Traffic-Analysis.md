@@ -117,6 +117,21 @@ Since we need to know how many HTTP packets the attacker recieved, we set the et
 **Answer**: 90
 
 ### Question 3 - What is the number of sniffed username&password entries?
+After the attacker performs the man-in-the-middle attack, we can see the attacker machine is sniffing HTTP traffic between the user and the web server (seen in the previous screenshot). Before we get into this question, I'll quickly explain how this worked and allowed the threat actor to sniff traffic. In this scenario, the victim wants to visit **testphp[.]vulnweb[.]com**. This means that it needs to send ethernet frames to the routers MAC address. However, the router may not know which IPv4 address belongs to which MAC address, so it sends out an ARP request. Other routers and devices start sending back ARP replies, claiming ownership of the various IPv4 addresses. This is when the attacker asserts themselves into the network. They begin sending out forged ARP replys that were crafted to trick the router into believing it owns those IPs (see examples in the previous question). ARP has no authentication, so it just simply trusts the ARP replies. When it sees the attackers ARP reply, the router just updates its ARP cache that essentially says if the packets are destined to IPv4 X, send the frames to `00:0c:29:e2:18:b4` (the attackers MAC).
+
+Let's use the same query as before but just slightly modify it to look at HTTP POST requests.
+```
+eth.dst==00:0c:29:e2:18:b4 and http.request.method=="POST"
+```
+This only returns a handful of packets. Let's look through each of them.
+
+<img width="984" height="179" alt="image" src="https://github.com/user-attachments/assets/a726e7c1-92f1-4150-87fa-bfb249d01a18" />
+
+We can see that packets 1226, 1446, 1561, 1599, 1668, and 1791 all appear to be submissions to a web form by looking at the info column which contains **POST**, **userinfo.php**, and **application/x-www-form-urlencoded**. This gives us six unique username and password captures. This is our answer.
+
+<img width="1954" height="1131" alt="image" src="https://github.com/user-attachments/assets/122339bc-223c-425a-a617-f1fafef8c168" />
+
+However, there's also another event that appears to be a new user creation where we can see the username and password that was set (along with a bunch of other important information). So, why doesn't this count towards the answer, giving us seven username and password sniffs?
 
 ### Question 4 - What is the password of the "Client986"?
 
