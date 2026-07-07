@@ -106,6 +106,15 @@ When the opcode is set to `1`, this only shows us ARP reqeusts. This will give u
 **Answer**: 284
 
 ### Question 2 - What is the number of HTTP packets received by the attacker?
+Now that we know the attacker MAC address, we can answer this with ease.
+```
+eth.dst==00:0c:29:e2:18:b4 and http
+```
+Since we need to know how many HTTP packets the attacker recieved, we set the ethernet destination address to the attacker's MAC address, and filter on HTTP packets only.
+
+<img width="951" height="848" alt="image" src="https://github.com/user-attachments/assets/5e61f777-2abe-452d-9f29-220093c4626f" />
+
+**Answer**: 90
 
 ### Question 3 - What is the number of sniffed username&password entries?
 
