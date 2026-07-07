@@ -95,7 +95,15 @@ Before we do anything, we need to identify the threat actor. It starts to get su
 
 <img width="1091" height="634" alt="image" src="https://github.com/user-attachments/assets/a5b4c9e6-f69e-4bf3-93e1-ab98c876a2fc" />
 
-The first few packets look normal. Devices are claiming ownership of specific IPv4 addresses. This question is asking for the number of crafted **ARP requests**, so we can knock out the first half of this question with this query: `arp.opcode==1`. This returns ARP requests only. If we wanted to return ARP replys, the opcode would be `2
+The first few packets look normal. Devices are claiming ownership of specific IPv4 addresses. It only starts to get suspicious at packet `287` when we see that `VMware_e2:18:b4 (00:0c:29:e2:18:b4)` claims that the IP `192.168.1.1` belongs to it. That IP was already claimed by `zte_f3:cd:f4 (50:78:b3:f3:cd:f4)` in packet `4`. We then see the same device claim another previously claimed IPv4 address (`192.168.1.12`). We can see this pattern throughout, which is a strong indication that the threat actor is `VMware_e2:18:b4`. Now that we've identified the attacker, we need to know how many ARP requests they've made. We can use the following filter:
+```
+eth.src==00:0c:29:e2:18:b4 and arp.opcode==1
+```
+When the opcode is set to `1`, this only shows us ARP reqeusts. This will give us the answer.
+
+<img width="957" height="842" alt="image" src="https://github.com/user-attachments/assets/149b9456-30b3-45c2-8a2f-c4163f798a98" />
+
+**Answer**: 284
 
 ### Question 2 - What is the number of HTTP packets received by the attacker?
 
