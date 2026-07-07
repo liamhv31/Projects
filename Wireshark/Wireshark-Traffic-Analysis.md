@@ -1,5 +1,7 @@
 ## Traffic Analysis
 
+## Part 1 - Nmap Scans
+
 ### Question 1 - What is the total number of the "TCP Connect" scans?
 First, let's understand a TCP connect scan. This type of scan uses the TCP three-way handshake against target ports to see if they're open. For each port, the scanner starts by sending a SYN (synchronize) packet. If the port is open, it will respond with a SYN-ACK (synchronize-acknowledge) packet. The scanner then returns an ACK (acknowledge) packet which establishes a connection. Immediately after the handshake completes, the scanner typically sends a TCP RST packet to terminate the connection. There are a few different ways we can identify TCP connect scans in Wireshark.
 
@@ -59,19 +61,49 @@ UDP port connections don't require a three-way handshake for connection, nor is 
 - **ICMP rate limiting**: Many devices introduce rate limiting for ICMP messages to prevent DDoS attacks, like those caused by **ICMP (Ping) Flood** attacks
 - **Network blocking/filtering**: Some people, like ISPs, may block ICMP packets from traversing the network to prevent network mapping or reduce overhead. E.g., Apple has been known to send packets with a very large Maximum Transmission Unit (MTU), which helps find the largest allowed packet size to reduce fragmentation, and thus connectivity latency. This is a double edged sword though, as the routers reciving these packets are possibly receving hundreds of millions of packets per second if it's a large scale telecommunications network. This means that to prevent network performance issues, some routers may have to drop these packets (even if they are legitimate), or there blocked via the firewall from reaching the network entirely.
 
-I digress. To find closed UDP ports, we can 
+I digress. To find closed UDP ports, we can use the following filter:
+```
+icmp.type==3 and icmp.code==3
+```
+- `icmp.type==3` means destination unreachable
+- `icmp.code==3` means port unreachable (closed UDP port)
+
+This will return your answer, which is the number of packets on the bottom of the page.
+
+<img width="1275" height="1204" alt="image" src="https://github.com/user-attachments/assets/07f11f06-213b-4c5a-afe5-d851b51d7c74" />
+
+**Answer**: 1083
 
 ### Question 4 - Which UDP port in the 55-70 port range is open?
+This question is easy to answer if we understand how UDP works. UDP is **connectionless**, meaning it doesn't wait to establish a connection before you can send data. It is a "fire and forget" protocol. You do not get notified that packets have been receieved and lost ones are not resent. What that means is that we are looking for any UDP packet that did _not_ return **ICMP - destination unreachable (port unreachable)**. We can use the greater than `>` and less than `<` operators to return only packets where the destination UPD port is equal to or between ports 55 and 70.
+```
+udp.dstport>=55 and udp.dstport<=70
+```
 
-### Question 5 - What is the number of ARP requests crafted by the attacker?
+<img width="1118" height="284" alt="image" src="https://github.com/user-attachments/assets/69d71583-a14f-4fdf-9673-ed376340766c" />
 
-### Question 6 - What is the number of HTTP packets received by the attacker?
+In the image above, we can see that there are three ports in the target range for UDP traffic. We can see that ports 67 and 69 returned an **ICMP - destination unreachable (port unreachable)** response. Port 68 did not.
 
-### Question 7 - What is the number of sniffed username&password entries?
+**Answer**: 68
 
-### Question 8 - What is the password of the "Client986"?
+## Part 2 - ARP Poisoning/Spoofing (A.K.A. Man-in-the-Middle Attack)
 
-### Question 9 - What is the comment provided by the "Client354"?
+### Question 1 - What is the number of ARP requests crafted by the attacker?
+First, a quick and high-level description on ARP. The Address Resolution Protocol is used to map an IP address to a physical MAC address within a local network. Essentially, the device sending the data sends out an **ARP request** asking "Who has this IP address? Tell IP X". The receiver then returns an **ARP reply** saying "IP X is at MAC address Y". That answer is then temporarily stored in the device's local ARP cache/table so it doesn't have to keep asking in the future.
+
+Before we do anything, we need to identify the threat actor. It starts to get suspicious at packet 287. One way we can do this is by looking for potential ARP spoofing attempts. This is when two MAC addresses claim the same IP address. This is suspicious because normally an IPv4 address should map to exactly one MAC address at any time. Since we just want to look at the MAC addresses claiming the IPv4 addresses, then we need to only return ARP replys. We can do this with the following query: `arp.opcode==2`.
+
+<img width="1091" height="634" alt="image" src="https://github.com/user-attachments/assets/a5b4c9e6-f69e-4bf3-93e1-ab98c876a2fc" />
+
+The first few packets look normal. Devices are claiming ownership of specific IPv4 addresses. This question is asking for the number of crafted **ARP requests**, so we can knock out the first half of this question with this query: `arp.opcode==1`. This returns ARP requests only. If we wanted to return ARP replys, the opcode would be `2
+
+### Question 2 - What is the number of HTTP packets received by the attacker?
+
+### Question 3 - What is the number of sniffed username&password entries?
+
+### Question 4 - What is the password of the "Client986"?
+
+### Question 5 - What is the comment provided by the "Client354"?
 
 ### Question 10 - What is the MAC address of the host "Galaxy A30"?
 
