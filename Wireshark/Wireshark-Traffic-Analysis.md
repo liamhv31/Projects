@@ -131,9 +131,22 @@ We can see that packets 1226, 1446, 1561, 1599, 1668, and 1791 all appear to be 
 
 <img width="1954" height="1131" alt="image" src="https://github.com/user-attachments/assets/122339bc-223c-425a-a617-f1fafef8c168" />
 
-However, there's also another event that appears to be a new user creation where we can see the username and password that was set (along with a bunch of other important information). So, why doesn't this count towards the answer, giving us seven username and password sniffs?
+**Answer**: 6
 
 ### Question 4 - What is the password of the "Client986"?
+Since there are so few events, you coul just look through each of the packets to try and find the login event from client986. However, if this is a much larger packet capture with hundreds of login events, it would be easier to apply a filter. Since we now know the format of these login event packets, we can select any one of them, expand the **HTML Form URL Encoded** tree, then the form item for the username. Right-click on the value (username), and select **Apply as Filter** &rarr; **Selected**.
+
+<img width="988" height="1024" alt="image" src="https://github.com/user-attachments/assets/82704622-c863-4de3-a75c-fc6a51c5b27f" />
+
+Then just replace the username with the one we are looking for. This will show just one event.
+
+<img width="1949" height="1210" alt="image" src="https://github.com/user-attachments/assets/3c050547-509b-449f-bd53-b209135b1c74" />
+
+You could also just do a string search across all packets with **Edit** &rarr; **Find packet...**.
+
+<img width="2545" height="1206" alt="image" src="https://github.com/user-attachments/assets/29f59181-6247-4673-b6f9-d62c3b246b18" />
+
+**Answer**: clientnothere!
 
 ### Question 5 - What is the comment provided by the "Client354"?
 
