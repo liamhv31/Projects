@@ -134,7 +134,7 @@ We can see that packets 1226, 1446, 1561, 1599, 1668, and 1791 all appear to be 
 **Answer**: 6
 
 ### Question 4 - What is the password of the "Client986"?
-Since there are so few events, you coul just look through each of the packets to try and find the login event from client986. However, if this is a much larger packet capture with hundreds of login events, it would be easier to apply a filter. Since we now know the format of these login event packets, we can select any one of them, expand the **HTML Form URL Encoded** tree, then the form item for the username. Right-click on the value (username), and select **Apply as Filter** &rarr; **Selected**.
+Since there are so few events, you could just look through each of the packets to try and find the login event from client986. However, if this is a much larger packet capture with hundreds of login events, it would be easier to apply a filter. Since we now know the format of these login event packets, we can select any one of them, expand the **HTML Form URL Encoded** tree, then the form item for the username. Right-click on the value (username), and select **Apply as Filter** &rarr; **Selected**.
 
 <img width="988" height="1024" alt="image" src="https://github.com/user-attachments/assets/82704622-c863-4de3-a75c-fc6a51c5b27f" />
 
@@ -149,16 +149,47 @@ You could also just do a string search across all packets with **Edit** &rarr; *
 **Answer**: clientnothere!
 
 ### Question 5 - What is the comment provided by the "Client354"?
+We can just modify the previous username search to find the comment:
+```
+urlencoded-form.value=="client354"
+```
+Expand the **HTML Form URL Encoded** tree to find the comment.
 
-### Question 10 - What is the MAC address of the host "Galaxy A30"?
+<img width="304" height="343" alt="image" src="https://github.com/user-attachments/assets/166ba291-d1a1-4d84-bbd3-4e3e807d6925" />
 
-### Question 11 - How many NetBIOS registration requests does the "LIVALJM" workstation have?
+**Answer**: Nice work!
 
-### Question 12 - Which host requested the IP address "172.16.13.85"?
+## Part 3 - Identifying Hosts: DHCP, NetBIOS, and Kerberos
 
-### Question 13 - What is the IP address of the user "u5"? (Enter the address in defanged format.)
+### Question 1 - What is the MAC address of the host "Galaxy A30"?
+For these first three questions, we're going to be looking at DHCP and NetBIOS traffic to find our answers. For this question, we're going to use DHCP to identify the MAC address. DHCP (Dynamic Host Configuration Protocol) allows IP addresses to be automatically assigned to devices on a network. It also assigns other important information like subnet masks, default gateways, and DNS servers. Without this, you would have to manually configure these settings for every network device.
 
-### Question 14 - What is the hostname of the available host in the Kerberos packets?
+We can find lots of information about the device and request by looking at **DHCP Request** packets. This will contain important details like the hostname, requested IP address, IP address lease time, and the client's MAC address. A **DHCP Request** is the third step in the DHCP **DORA (Discover, Offer, Request, Acknowledge)** process where the client sends a broadcast message acknowleding the offered DHCP configuration and requesting to officially use it.
+
+Our query will be two parts:
+```
+dhcp.option.dhcp==3 and dhcp.option.hostname contains "Galaxy A30"
+```
+- `dhcp.option.dhcp==3` filters by DHCP Requests
+- `dhcp.option.hostname contains "Galaxy A30"` performs a keyword search for our hostname string in the DHCP options hostname (**Option 12**) field
+
+If we first try searching by `Galaxy A30`, nothing will be returned. The format of the string is slightly different. If we search by just `Galaxy` instead, we get two results. If we search for both `Galaxy` _and_ `A30` as seperate strings, we will return the correct packet. There are multiple ways of writing this query, but this is what I chose:
+```
+dhcp.option.dhcp==3 and (dhcp.option.hostname contains "Galaxy" and dhcp.option.hostname contains "A30")
+```
+Expand **Option: (12) Host Name** and **Option: (61) Client identifier** under the **Dynamic Host Configuration Protocol (Request)** tree to see the full hostname and client MAC address respectively.
+
+<img width="958" height="424" alt="image" src="https://github.com/user-attachments/assets/c135d8a5-4626-4f31-a972-d3cf9e7fb6ae" />
+
+**Answer**: 9a:81:41:cb:96:6c
+
+### Question 2 - How many NetBIOS registration requests does the "LIVALJM" workstation have?
+
+### Question 3 - Which host requested the IP address "172.16.13.85"?
+
+### Question 4 - What is the IP address of the user "u5"? (Enter the address in defanged format.)
+
+### Question 5 - What is the hostname of the available host in the Kerberos packets?
 
 ### Question 15 - Investigate the anomalous packets. Which protocol is used in ICMP tunnelling?
 
