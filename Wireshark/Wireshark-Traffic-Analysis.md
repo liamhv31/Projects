@@ -184,8 +184,31 @@ Expand **Option: (12) Host Name** and **Option: (61) Client identifier** under t
 **Answer**: 9a:81:41:cb:96:6c
 
 ### Question 2 - How many NetBIOS registration requests does the "LIVALJM" workstation have?
+NetBIOS stands for **Network Basic Input/Output System**. It is a legacy programming interface that allows applications on different computers to communicate over a local network. NetBIOs has largely been replaced by more modern solutions like DNS, and mDNS (Multicast DNS) and LLMNR for local network discovery.
+
+In Wireshark, we can find NetBIOS packets with the `nbns` filter. This returns to many packets to sift through. If we click on one of the packets though and expand the **NetBIOS Name Service** tree &rarr; **Queries**, you will see a workstation name branch that can be expanded. Open that, and then we can right-click on the name field and apply it as a filter.
+
+<img width="957" height="848" alt="image" src="https://github.com/user-attachments/assets/671341ce-c33b-4ce1-8df1-65dd3b663898" />
+
+Now we just need to adjust the query to find the value and packet types we're looking for.
+```
+nbns.name contains "LIVALJM" and nbns.flags.opcode == 5 and nbns.flags.response == 0
+```
+- `nbns.flags.opcode == 5` filters for NetBIOS registration events
+- `nbns.flags.response == 0` filters for for requests
+
+**Answer**: 16
 
 ### Question 3 - Which host requested the IP address "172.16.13.85"?
+Since this question is asking about a requested IP address, we need to look at DHCP packets since this protocol is what automatically assigns IP addresses to requesting devices. This question can be answered with a simple filter.
+```
+dhcp.option.requested_ip_address==172.16.13.85
+```
+This returns just one packet, and you can find the hostname under **Dynamic Host Configuration Protocol (Request)** &rarr; **Option: (12) Host Name** &rarr; **Host Name**
+
+<img width="954" height="851" alt="image" src="https://github.com/user-attachments/assets/3669718e-75e2-49c3-8b59-b88dc881eec1" />
+
+**Answer**: Galaxy-A12
 
 ### Question 4 - What is the IP address of the user "u5"? (Enter the address in defanged format.)
 
