@@ -211,8 +211,26 @@ This returns just one packet, and you can find the hostname under **Dynamic Host
 **Answer**: Galaxy-A12
 
 ### Question 4 - What is the IP address of the user "u5"? (Enter the address in defanged format.)
+For these next two questions, we will switch to Kerberos traffic. First, a quick explanation on this protocol. Kerberos allows authentication on a network. It's a secure protocol that allows users and services to prove their identity using encrypted "tickets" instead of sending passwords over the network. With this in mind, to answer this question, we are essentially looking for kerberos authentication packets for user "u5". We can start with the folllowing filter.
+```
+kerberos.CNameString=="u5"
+```
+`CNameString` stands for "Client Name String". This will return a few different types of kerberos packets (AS-REP, AS-REQ, and TGS-REP). AS-REQ and AS-REP are used for the initial login to get a master ticket. TGS-REP is the reply that grants the requester access to a specific service. The AS-REQ packets are where the user or service first starts the kerberos authentication by making a request to the **Key Distribution Center (KDC)** for a master ticket. This means that the packets source IP belongs to whoever is making that request (in this case, "u5"), and the destination is the **KDC**/**domain controller** (The domain controller being the server, and the KDC being the authentication service running on it). Make sure the IP is defanged.
+
+<img width="464" height="160" alt="image" src="https://github.com/user-attachments/assets/2b31a5de-f246-4a15-93b5-2f953bb94499" />
+
+**Answer**: 10[.]1[.]12[.]2
 
 ### Question 5 - What is the hostname of the available host in the Kerberos packets?
+This is honestly a pretty poorly worded question and threw me off for a minute. As far as I know, there is no concept in Kerberos for "available host". What the author almost certainly meant (and this is confirmed by the answer), is "what is the client host/computer name requesting the Kerberos ticket?". Hostnames in Kerberos can be identified by looking for a `$` appended to the `CNameString` in Kerberos packets. Essentially, `CNameString`'s with a `$` are hostnames, ones without are usernames. So to find our hostname, we just need to search for `CNameString`'s that contain a `$`.
+```
+kerberos.CNameString contains "$"
+```
+This returns one packet.
+
+<img width="476" height="389" alt="image" src="https://github.com/user-attachments/assets/cccd1dd4-8309-4d1c-908b-743db891522b" />
+
+**Answer**: xp1$
 
 ### Question 15 - Investigate the anomalous packets. Which protocol is used in ICMP tunnelling?
 
