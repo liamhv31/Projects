@@ -232,9 +232,90 @@ This returns one packet.
 
 **Answer**: xp1$
 
-### Question 15 - Investigate the anomalous packets. Which protocol is used in ICMP tunnelling?
+## Part 4 - Tunneling Traffic: DNS and ICMP
 
-### Question 16 - Investigate the anomalous packets. What is the suspicious main domain address that receives anomalous DNS queries? (Enter the address in defanged format.)
+### Question 1 - Investigate the anomalous packets. Which protocol is used in ICMP tunnelling?
+Wireshark is not an NIDS or NIPS, so identifying tunneling activity needs to be done entirely manually. ICMP can be a popular choice for data tunneling since it's generally trusted by firewalls for things like network diagnostics. There are a few clues we can start with to help find the packets of interest:
+- Large ICMP echo requests/replies
+- Continuous streams of echo requests/replies
+- Unusual data within ICMP payloads
+- Traffic that is abnormal to send between specific hosts (better if you know the network)
+
+We can start by simply just returning ICMP packets with the `icmp` filter. This doesn't remove much, but it's about the process of elimination. Sorting the packets by frame length shows many packets over 1000 bytes long.
+
+<img width="843" height="469" alt="image" src="https://github.com/user-attachments/assets/481399a2-49ce-48ab-ac08-bca5d810948b" />
+
+Now it's a matter of going through the ICMP packet data to see if we spot anything out of the ordinary. It's also important to keep an eye out for breaks in the pattern. This could take a while. As I was scrolling through, I intuitevly start to recognize a pattern emerge. Humans are exceptionally good when it comes to pattern recognition. This skill was hardwired in our brains as it was necesssary a long, long time ago for our survival. So, if you find a a pattern, and then spot a deviation in said pattern, trust your instincts.
+
+<img width="640" height="369" alt="image" src="https://github.com/user-attachments/assets/4ab5e0a3-7d1d-485d-9d1d-b31bfa079ccb" />
+
+Do you see it too? Request, reply, request, reply... This continues for a few dozen packets, and then I stumbled upon this.
+
+<img width="636" height="374" alt="image" src="https://github.com/user-attachments/assets/a9bd7ce0-7d6d-400b-858c-a63ab0b8bd74" />
+
+This is where I start to really look closely at what's in the ICMP packet data. It looks like our intuition paid off. Packet 46, 48, and 52 start to show some intersting stuff.
+
+<img width="674" height="346" alt="image" src="https://github.com/user-attachments/assets/303e1c00-1018-4177-b735-f1d79ede4b26" />
+
+We can see several strings related to encryption algorithms. Let's take a depper look at this packet to see what we can find.
+```
+0000   45 00 03 4c 39 6c 40 00 40 06 e7 7f 0a 5f 01 01   E..L9l@.@...._..
+0010   0a 5f 01 02 c8 8b 00 16 31 7d 53 ca 0e 1b bf cb   ._......1}S.....
+0020   80 18 01 c9 ac 10 00 00 01 01 08 0a 00 6d 6a eb   .............mj.
+0030   00 6d 86 43 00 00 03 14 08 14 1e e1 33 4c 41 dc   .m.C........3LA.
+0040   10 c2 8f cb c2 72 49 d7 72 3c 00 00 00 7e 64 69   .....rI.r<...~di
+0050   66 66 69 65 2d 68 65 6c 6c 6d 61 6e 2d 67 72 6f   ffie-hellman-gro
+0060   75 70 2d 65 78 63 68 61 6e 67 65 2d 73 68 61 32   up-exchange-sha2
+0070   35 36 2c 64 69 66 66 69 65 2d 68 65 6c 6c 6d 61   56,diffie-hellma
+0080   6e 2d 67 72 6f 75 70 2d 65 78 63 68 61 6e 67 65   n-group-exchange
+0090   2d 73 68 61 31 2c 64 69 66 66 69 65 2d 68 65 6c   -sha1,diffie-hel
+00a0   6c 6d 61 6e 2d 67 72 6f 75 70 31 34 2d 73 68 61   lman-group14-sha
+00b0   31 2c 64 69 66 66 69 65 2d 68 65 6c 6c 6d 61 6e   1,diffie-hellman
+00c0   2d 67 72 6f 75 70 31 2d 73 68 61 31 00 00 00 0f   -group1-sha1....
+00d0   73 73 68 2d 72 73 61 2c 73 73 68 2d 64 73 73 00   ssh-rsa,ssh-dss.
+00e0   00 00 9d 61 65 73 31 32 38 2d 63 74 72 2c 61 65   ...aes128-ctr,ae
+00f0   73 31 39 32 2d 63 74 72 2c 61 65 73 32 35 36 2d   s192-ctr,aes256-
+0100   63 74 72 2c 61 72 63 66 6f 75 72 32 35 36 2c 61   ctr,arcfour256,a
+0110   72 63 66 6f 75 72 31 32 38 2c 61 65 73 31 32 38   rcfour128,aes128
+0120   2d 63 62 63 2c 33 64 65 73 2d 63 62 63 2c 62 6c   -cbc,3des-cbc,bl
+0130   6f 77 66 69 73 68 2d 63 62 63 2c 63 61 73 74 31   owfish-cbc,cast1
+0140   32 38 2d 63 62 63 2c 61 65 73 31 39 32 2d 63 62   28-cbc,aes192-cb
+0150   63 2c 61 65 73 32 35 36 2d 63 62 63 2c 61 72 63   c,aes256-cbc,arc
+0160   66 6f 75 72 2c 72 69 6a 6e 64 61 65 6c 2d 63 62   four,rijndael-cb
+0170   63 40 6c 79 73 61 74 6f 72 2e 6c 69 75 2e 73 65   c@lysator.liu.se
+0180   00 00 00 9d 61 65 73 31 32 38 2d 63 74 72 2c 61   ....aes128-ctr,a
+0190   65 73 31 39 32 2d 63 74 72 2c 61 65 73 32 35 36   es192-ctr,aes256
+01a0   2d 63 74 72 2c 61 72 63 66 6f 75 72 32 35 36 2c   -ctr,arcfour256,
+01b0   61 72 63 66 6f 75 72 31 32 38 2c 61 65 73 31 32   arcfour128,aes12
+01c0   38 2d 63 62 63 2c 33 64 65 73 2d 63 62 63 2c 62   8-cbc,3des-cbc,b
+01d0   6c 6f 77 66 69 73 68 2d 63 62 63 2c 63 61 73 74   lowfish-cbc,cast
+01e0   31 32 38 2d 63 62 63 2c 61 65 73 31 39 32 2d 63   128-cbc,aes192-c
+01f0   62 63 2c 61 65 73 32 35 36 2d 63 62 63 2c 61 72   bc,aes256-cbc,ar
+0200   63 66 6f 75 72 2c 72 69 6a 6e 64 61 65 6c 2d 63   cfour,rijndael-c
+0210   62 63 40 6c 79 73 61 74 6f 72 2e 6c 69 75 2e 73   bc@lysator.liu.s
+0220   65 00 00 00 69 68 6d 61 63 2d 6d 64 35 2c 68 6d   e...ihmac-md5,hm
+0230   61 63 2d 73 68 61 31 2c 75 6d 61 63 2d 36 34 40   ac-sha1,umac-64@
+0240   6f 70 65 6e 73 73 68 2e 63 6f 6d 2c 68 6d 61 63   openssh.com,hmac
+0250   2d 72 69 70 65 6d 64 31 36 30 2c 68 6d 61 63 2d   -ripemd160,hmac-
+0260   72 69 70 65 6d 64 31 36 30 40 6f 70 65 6e 73 73   ripemd160@openss
+0270   68 2e 63 6f 6d 2c 68 6d 61 63 2d 73 68 61 31 2d   h.com,hmac-sha1-
+0280   39 36 2c 68 6d 61 63 2d 6d 64 35 2d 39 36 00 00   96,hmac-md5-96..
+0290   00 69 68 6d 61 63 2d 6d 64 35 2c 68 6d 61 63 2d   .ihmac-md5,hmac-
+02a0   73 68 61 31 2c 75 6d 61 63 2d 36 34 40 6f 70 65   sha1,umac-64@ope
+02b0   6e 73 73 68 2e 63 6f 6d 2c 68 6d 61 63 2d 72 69   nssh.com,hmac-ri
+02c0   70 65 6d 64 31 36 30 2c 68 6d 61 63 2d 72 69 70   pemd160,hmac-rip
+02d0   65 6d 64 31 36 30 40 6f 70 65 6e 73 73 68 2e 63   emd160@openssh.c
+02e0   6f 6d 2c 68 6d 61 63 2d 73 68 61 31 2d 39 36 2c   om,hmac-sha1-96,
+02f0   68 6d 61 63 2d 6d 64 35 2d 39 36 00 00 00 1a 6e   hmac-md5-96....n
+0300   6f 6e 65 2c 7a 6c 69 62 40 6f 70 65 6e 73 73 68   one,zlib@openssh
+0310   2e 63 6f 6d 2c 7a 6c 69 62 00 00 00 1a 6e 6f 6e   .com,zlib....non
+0320   65 2c 7a 6c 69 62 40 6f 70 65 6e 73 73 68 2e 63   e,zlib@openssh.c
+0330   6f 6d 2c 7a 6c 69 62 00 00 00 00 00 00 00 00 00   om,zlib.........
+0340   00 00 00 00 00 00 00 00 00 00 00 00               ............
+```
+Above is the hex and ASCII dump of the data payload.
+
+### Question 2 - Investigate the anomalous packets. What is the suspicious main domain address that receives anomalous DNS queries? (Enter the address in defanged format.)
 
 ### Question 17 - How many incorrect login attempts are there?
 
