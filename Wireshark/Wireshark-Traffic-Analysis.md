@@ -313,7 +313,20 @@ We can see several strings related to encryption algorithms. Let's take a depper
 0330   6f 6d 2c 7a 6c 69 62 00 00 00 00 00 00 00 00 00   om,zlib.........
 0340   00 00 00 00 00 00 00 00 00 00 00 00               ............
 ```
-Above is the hex and ASCII dump of the data payload.
+Above is the hex and ASCII dump of the data payload. While the first clue was the cryptographic data payload, another key finding is that the data payload starts with an IP header. Let me explain. The data hex begins with the values `45 00 03 4c ...`. Keep in mind that every IPv4 header is structured like so:
+- **Byte 1**: Version/IHL
+- **Byte 2**: DSCP/ECN
+- **Byte 3-4**: Total length
+
+<img width="1273" height="576" alt="image" src="https://github.com/user-attachments/assets/db65354e-e1df-4b06-ab16-307d41e4e2cc" />
+
+With that said, let's convert each of these values. Since `45` is a hex value, we evaluate each number on it's own (`4` and `5`). We don't really need to do any math since the hex values `4` and `5` equal the decimal values `4` and `5` respectively.
+
+<img width="691" height="583" alt="image" src="https://github.com/user-attachments/assets/9fe2efe9-3558-4db6-b888-6d7f970f6b31" />
+
+For the **Version** field of an IP header, the only possible values are `4` and `6`. This is `4`, meaning it's an IPv4 packet. The **IHL (Internet Header Length)** is `5`. This will tell us the header size of this packet, which is done by multiplying the **IHL** by `4`, so `5 x 4 = 20 bytes`. This is a standard IPv4 header size.
+
+So why is it 20 _bytes_ and why multiply by `4`? The IHL field contains the number of 32-bit words in the header. `32 bits / 8 = 4 bytes` (because 8 bits is 1 byte). So one word is 4 bytes. So if the IHL is `5`. that means that `5 words x 4 bytes/word = 20 bytes`.
 
 ### Question 2 - Investigate the anomalous packets. What is the suspicious main domain address that receives anomalous DNS queries? (Enter the address in defanged format.)
 
