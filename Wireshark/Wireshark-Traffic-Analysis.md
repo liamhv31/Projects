@@ -336,6 +336,8 @@ DSCP has 64 possible values that can be set for it's bits. The DSCP bits in this
 
 <img width="726" height="285" alt="image" src="https://github.com/user-attachments/assets/711dd5eb-5086-48fc-b80e-c81f81257512" />
 
+With just this information alone, it is an abundance of evidence that points towards this being an IPv4 packet.
+
 ### Question 2 - Investigate the anomalous packets. What is the suspicious main domain address that receives anomalous DNS queries? (Enter the address in defanged format.)
 
 ### Question 17 - How many incorrect login attempts are there?
