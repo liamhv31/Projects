@@ -328,6 +328,14 @@ For the **Version** field of an IP header, the only possible values are `4` and 
 
 So why is it 20 _bytes_ and why multiply by `4`? The IHL field contains the number of 32-bit words in the header. `32 bits / 8 = 4 bytes` (because 8 bits is 1 byte). So one word is 4 bytes. So if the IHL is `5`. that means that `5 words x 4 bytes/word = 20 bytes`.
 
+Next is `00`. Before we see how this tells us it's part of an IP header, let's first understand, just a bit, what the second byte of an IPv4 header is. This represents the **Type of Service (TOS)**. This is how it's labeled in the screenshot above. Directly from **RFC 791** from 1981 - "the TOS is for internet service quality selection". It tells routers and other intermediary devices how to handle packets (prioritization, delay, throughput, and reliability). **RFC 2474** was published in 1998 which divided the TOS into two parts - the **Differentiated Services Codepoint (DSCP)** and **Currently Unused (CU)**. The first six bits belonged to the DSCP, and the last two belonged to the CU. Together, they redefine the TOS byte as the **Differentiated Services (DS) Field**. DSCP is the modern standard for prioritizing data across Layer 3 IP networks. CU, as the name suggests, were unused and therefore not really defined. DS-compliant interfaces would simply ignore them when determining how to forward a packet. Finally, **RFC 3168** is published in 2001. This repurposes the two CU bits for **Explicit Congestion Notification (ECN)**. This is an an optional extension that allows network routers and end-nodes to detect and signal network congestion without dropping packets. This is the current format still used today. To recap, the DSCP makes up the first 6 bits, and the ECN makes up the last two.
+
+So, technically the above image is a _bit_ outdated, but it serves the purpose of demonstrating the IPv4 header byte breakdown.
+
+DSCP has 64 possible values that can be set for it's bits. The DSCP bits in this packet are `000000`, which is just `0` in decimal. That value means **Default (best-effort)**. The ECN field has four possible values. Again, in this case it's just `0`, which means **Not-ECT**, or "The packet sender or receiver does not support ECN". We can actually confirm this in the packet itself.
+
+<img width="726" height="285" alt="image" src="https://github.com/user-attachments/assets/711dd5eb-5086-48fc-b80e-c81f81257512" />
+
 ### Question 2 - Investigate the anomalous packets. What is the suspicious main domain address that receives anomalous DNS queries? (Enter the address in defanged format.)
 
 ### Question 17 - How many incorrect login attempts are there?
