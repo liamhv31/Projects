@@ -332,11 +332,31 @@ Next is `00`. Before we see how this tells us it's part of an IP header, let's f
 
 So, technically the above image is a _bit_ outdated, but it serves the purpose of demonstrating the IPv4 header byte breakdown.
 
-DSCP has 64 possible values that can be set for it's bits. The DSCP bits in this packet are `000000`, which is just `0` in decimal. That value means **Default (best-effort)**. The ECN field has four possible values. Again, in this case it's just `0`, which means **Not-ECT**, or "The packet sender or receiver does not support ECN". We can actually confirm this in the packet itself.
+DSCP has 64 possible values that can be set for it's bits. The DSCP bits in this packet are `000000`, which is just `0` in decimal. That value means **Default (best-effort)**. The ECN field has four possible values. Again, in this case it's just `0`, which means **Not-ECT**, or "The packet sender or receiver does not support ECN". We can actually confirm this in the packet itself. The final two bytes are `03 4c`. We can treat this as a single number because the last part of the header is defined as one, 16-bit value. First we need to convert each to decimal. `03` is simply `3`, and `4c` can be treated as such:
+- `4` = `4`
+- `c` = `12`
+Now to actually convert it to decimal: `4c = (4 x 16) + 12 = 64 + 12 = 76`. So now `03 = 3` and `4c = 76`. Let me explain the conversion math for `4c` first. Hexadecimal is base 16, which is why we do `(4 x 16)`. So why isn't the entire hex value calculated by 16? Well look at a decimal number like 45 as an example. We don't calculate it by doing `4 x 10` and `5 x 10`. Instead, we do: `(4 x 10) + 5` because the `4` is in the _tens_ place, while the `5` is in the _ones_ place. Hex works the same way. `4` is in the _16s_ place, while `c` is in the _ones_ place. This is why it's `(4 x 16) + 12`. Next we need to understand why we need to multiply by `256`. Each byte (e.g., `03`) contains `8` bits. That means an 8-bit number can represent 256 different values (`2^8 = 256`). So when you have two bytes, the left bytes represents how many groups of `256` you have, just like how the left most two digit decimal number represents the number of _tens_ it has. With that being said, the math after converting each byte to decimal would be: `3 x 256 + 76 = 844`. Another way to think about it is that the left byte tells us how many full blocks of 256 there are, while the right byte is the remainder. So the nested IPv4 packet is 844 bytes.
+
+Let's tie this all together now. The **total** size of this packet is 886 bytes. Assuming a standard Ethernet II header, that would be 14 bytes. This leaves 872 bytes remaining. The outer IPv4 packet is also a standard 20 byte header, which brings us to 852 bytes. The last 8 bytes outside of the nested IPv4 packet belong to the ICMP header. An ICMP Echo Request (Type 8) always has an 8-byte header before the data begins. So, that's `886 total packet bytes - 14 byte Ethernet II header - 20 byte outer IPv4 header - 8 byte ICMP Echo Request header = 844 bytes for the encapsulated IPv4 packet`!
+
+<img width="955" height="845" alt="image" src="https://github.com/user-attachments/assets/a2215289-d825-4c57-b654-b17c475ed932" />
+
+That was a lot to explain just to demonstrate that this was likely an ICMP tunneling event, but now for the nail in the coffin. The payload data contains unmistakable SSH key-exchange data:
+```
+diffie-hellman-group-exchange-sha256
+ssh-rsa
+ssh-dss
+aes128-ctr
+hmac-sha1
+zlib@openssh.com
+```
+With all of this evidence, we can be absolutely certain about the answer.
+
+**Answer**: SSH
 
 <img width="726" height="285" alt="image" src="https://github.com/user-attachments/assets/711dd5eb-5086-48fc-b80e-c81f81257512" />
 
-With just this information alone, it is an abundance of evidence that points towards this being an IPv4 packet.
+With just this information alone, it is an abundance of evidence that points towards this being an IPv4 packet encapsualted in ICMP
 
 ### Question 2 - Investigate the anomalous packets. What is the suspicious main domain address that receives anomalous DNS queries? (Enter the address in defanged format.)
 
