@@ -360,30 +360,52 @@ With all of this evidence, we can be absolutely certain about the answer.
 **Answer**: SSH
 
 ### Question 2 - Investigate the anomalous packets. What is the suspicious main domain address that receives anomalous DNS queries? (Enter the address in defanged format.)
+In tunneling and data exfiltration attacks, attackers will typically have a domain that acts as a Command and Control (C2 or C&C) channel. Since we're looking for DNS _queries_, we can start by filtering just for DNS query packets.
+```
+dns.flags.response == 0
+```
+This cuts the number of packets by more than half already. We want to look for DNS queries that may be abnormally long or contain lots of encoded data (e.g., base64, high-entropy). A key indicator will be domain names that look something like `a83hf9283hf9283hf9283hf9283.data.example.com`. There's not really a better way to do this in Wireshark other than simply scrolling until we find something that fits this description, since Wireshark isn't a detection tool. Packet 2621 has a query that fits our description perfectly.
+```
+A8D603B0DE000000009AF29E902AB216780EAFD10AA3E4A376A2D9165E7809E.2030742EDA1B513BF68DFD675E855A2AA61B2BCE0A7889811D12B34806B9A18.441119E94628EA35FFF9.dataexfil.com
+```
+It's even so generous to specify `dataexfil` as the domain name (which is part of our answer). Not that we need much more proof, but the query/subdomain changes every single time since the data being sent is always different.
 
-### Question 17 - How many incorrect login attempts are there?
+<img width="986" height="632" alt="image" src="https://github.com/user-attachments/assets/afeec132-5e28-41c1-a6f2-407a774f7e3f" />
 
-### Question 18 - What is the size of the file accessed by the "ftp" account?
+Make sure you enter the answer in _defanged_ format
 
-### Question 19 - The adversary uploaded a document to the FTP server. What is the filename?
+**Answer**: dataexfil[.]com
 
-### Question 20 - The adversary tried to assign special flags to change the executing permissions of the uploaded file. What is the command used by the adversary?
+## Part 5 - Cleartext Protocol Analysis: FTP
 
-### Question 21 - Investigate the user agents. What is the number of anomalous  "user-agent" types?
+### Question 1 - How many incorrect login attempts are there?
+First, **File Transfer Protocol (FTP)** is a network protocol that handles uploading, downloading, and moving files between computers. It uses a client-server model and uses two seperate channels: one for data transfer, the other for commands.
 
-### Question 22 - What is the packet number with a subtle spelling difference in the user agent field?
+### Question 2 - What is the size of the file accessed by the "ftp" account?
 
-### Question 23 - Locate the "Log4j" attack starting phase. What is the packet number?
+### Question 3 - The adversary uploaded a document to the FTP server. What is the filename?
 
-### Question 24 - Locate the "Log4j" attack starting phase and decode the base64 command. What is the IP address contacted by the adversary? (Enter the address in defanged format and exclude "{}".)
+### Question 4 - The adversary tried to assign special flags to change the executing permissions of the uploaded file. What is the command used by the adversary?
 
-### Question 25 - What is the frame number of the "Client Hello" message sent to "accounts.google.com"?
+## Part 6 - Cleartext Protocol Analysis: HTTP
 
-### Question 26 - Decrypt the traffic with the "KeysLogFile.txt" file. What is the number of HTTP2 packets?
+### Question 1 - Investigate the user agents. What is the number of anomalous  "user-agent" types?
 
-### Question 27 - Go to Frame 322. What is the authority header of the HTTP2 packet? (Enter the address in defanged format.)
+### Question 2 - What is the packet number with a subtle spelling difference in the user agent field?
 
-### Question 28 - Investigate the decrypted packets and find the flag! What is the flag?
+### Question 3 - Locate the "Log4j" attack starting phase. What is the packet number?
+
+### Question 4 - Locate the "Log4j" attack starting phase and decode the base64 command. What is the IP address contacted by the adversary? (Enter the address in defanged format and exclude "{}".)
+
+## Part 7 - Encrypted Protocol Analysis: Decrypting HTTPS
+
+### Question 1 - What is the frame number of the "Client Hello" message sent to "accounts.google.com"?
+
+### Question 2 - Decrypt the traffic with the "KeysLogFile.txt" file. What is the number of HTTP2 packets?
+
+### Question 3 - Go to Frame 322. What is the authority header of the HTTP2 packet? (Enter the address in defanged format.)
+
+### Question 4 - Investigate the decrypted packets and find the flag! What is the flag?
 
 ### Question 29 - What is the packet number of the credentials using "HTTP Basic Auth"?
 
