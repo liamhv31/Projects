@@ -379,7 +379,9 @@ Make sure you enter the answer in _defanged_ format
 ## Part 5 - Cleartext Protocol Analysis: FTP
 
 ### Question 1 - How many incorrect login attempts are there?
-First, **File Transfer Protocol (FTP)** is a network protocol that handles uploading, downloading, and moving files between computers. It uses a client-server model and uses two seperate channels: one for data transfer, the other for commands.
+First, **File Transfer Protocol (FTP)** is a network protocol that handles uploading, downloading, and moving files between computers. It uses a client-server model and uses two seperate channels: one for data transfer, the other for commands. This question is asking us to find the number of times someone (the client) has tried to login to an FTP server and failed due to incorrect login attempts. FTP actually has a code specifically for this, error code `530`, which means **Not logged in**.
+
+A valid question you may ask is - why not use code `430` (invalid username or password)? `530` is the standard reply code defined by [RFC 959](https://datatracker.ietf.org/doc/html/rfc959) for authentication failures. Code `430` is not a standard FTP reply code. Some FTP sevrers may use a vendor-specific code or message to indicate "invalid username or password". You will even see that there is no definition for code `430` in the RFC 959 publication. This is why code `530` can be reliably expected across FTP implementations for authentication failures. We'll see the use of error code `530` in the Wireshark packet capture we look at.
 
 ### Question 2 - What is the size of the file accessed by the "ftp" account?
 
