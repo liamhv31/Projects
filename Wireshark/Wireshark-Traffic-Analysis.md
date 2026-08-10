@@ -401,6 +401,49 @@ This will show the entire TCP conversation this packet was involved in as plaint
 **Answer**: 39424
 
 ### Question 3 - The adversary uploaded a document to the FTP server. What is the filename?
+This can be a bit tricky to answer in Wireshark if you don't know who the adversary is yet (from something like a NIDS/NIPS alert), because then you have to identify the threat actor manually. Luckily for us, this lab only returns one event from the command we will use. Since the question is asking for a document that was **uploaded**, we need to look at the **STOR** command. This FTP request command is used to upload a file to the server: `ftp.request.command=="STOR"`. This will show the filename immediately in the **info** column of the packet, but we also need the file extension.
+
+<img width="710" height="102" alt="image" src="https://github.com/user-attachments/assets/ee9903fd-64c2-4dd7-96ee-6804e5db9f99" />
+
+Follow the TCP stream for this packet and search for **README**. You will notice that there actually isn't a file extension.
+
+<img width="349" height="33" alt="image" src="https://github.com/user-attachments/assets/1269ec67-26d4-46ef-9f4d-411da197538c" />
+
+In fact, the coded answer to this question is wrong. The answer expects **resume.doc**, which is not the file uploaded by the adversary. To explain why, let's go through the entire FTP stream. This stream starts with the initial connection and login:
+```
+220 ProFTPD 1.3.0a Server (ProFTPD Anonymous Server) [192.168.1.231]
+USER ftp
+331 Anonymous login ok, send your complete email address as your password.
+PASS ftp
+230 Anonymous access granted, restrictions apply.
+```
+This block means that the anonymous user (ftp), is logging into an FTP server that identifies itself as ProFTPD 1.3.0a. We can see the FTP code `230`, which means the authentication was successful. Next, the client uses the **SYST** command to check the operating system type used by the server, and the response indicates a UNIX system.
+```
+SYST
+215 UNIX Type: L8
+```
+Then we see:
+```
+FEAT
+211-Features:
+ MDTM
+ REST STREAM
+ SIZE
+211 End
+```
+The client sends the **FEAT** command which stands for "feature", and it tells the server to list any extended features and optional commands it supports. In this case, it supports:
+- **MDTM**: Retrieve a file's modification time
+- **REST STREAM**: Resume interrupted transfers
+- **SIZE**: Retrieve a file's size
+
+Then, the client checks the current working directory.
+```
+PWD
+257 "/" is current directory.
+```
+So they are currently in the root (`/`) directory
+
+**Answer**: resume.doc
 
 ### Question 4 - The adversary tried to assign special flags to change the executing permissions of the uploaded file. What is the command used by the adversary?
 
