@@ -381,9 +381,24 @@ Make sure you enter the answer in _defanged_ format
 ### Question 1 - How many incorrect login attempts are there?
 First, **File Transfer Protocol (FTP)** is a network protocol that handles uploading, downloading, and moving files between computers. It uses a client-server model and uses two seperate channels: one for data transfer, the other for commands. This question is asking us to find the number of times someone (the client) has tried to login to an FTP server and failed due to incorrect login attempts. FTP actually has a code specifically for this, error code `530`, which means **Not logged in**.
 
-A valid question you may ask is - why not use code `430` (invalid username or password)? `530` is the standard reply code defined by [RFC 959](https://datatracker.ietf.org/doc/html/rfc959) for authentication failures. Code `430` is not a standard FTP reply code. Some FTP sevrers may use a vendor-specific code or message to indicate "invalid username or password". You will even see that there is no definition for code `430` in the RFC 959 publication. This is why code `530` can be reliably expected across FTP implementations for authentication failures. We'll see the use of error code `530` in the Wireshark packet capture we look at.
+A valid question you may ask is - why not use code `430` (invalid username or password)? `530` is the standard reply code defined by [RFC 959](https://datatracker.ietf.org/doc/html/rfc959) for authentication failures. Code `430` is not a standard FTP reply code. Some FTP servers may use a vendor-specific code or message to indicate "invalid username or password". You will even see that there is no definition for code `430` in the RFC 959 publication. This is why code `530` can be reliably expected across FTP implementations for authentication failures. We'll see the use of error code `530` in the Wireshark packet capture we look at. So, to answer this question, we can simply use the filter: `ftp.response.code==530`. The number of packets returned is the out answer.
+
+**Answer**: 737
 
 ### Question 2 - What is the size of the file accessed by the "ftp" account?
+The previous question looked at FTP responses (what the server answered as a result of an action/request from the client). This time we will look at the client request since we're looking for someone accessing a file on an FTP server. FTP has the `USER` request command, where the argument passed with it is the username. We can use this in conjunction with the username "ftp", to find all of their FTP requests.
+```
+ftp.request.command=="USER" and ftp.request.arg=="ftp"
+```
+This only returns one packet, and we can see the file name and size by right-clicking on the packet and selecting **Follow** &rarr; **TCP Stream**.
+
+<img width="588" height="420" alt="image" src="https://github.com/user-attachments/assets/4e906833-0e87-4401-9e71-2cf009b11bbf" />
+
+This will show the entire TCP conversation this packet was involved in as plaintext. Not too far down, we can see the **RETR** request for the filename of interest, and how large (in bytes) it is. **RETR** is an FTP command used to retrieve a copy of a file from the server.
+
+<img width="669" height="570" alt="image" src="https://github.com/user-attachments/assets/3459da53-cb21-4b17-83d3-1f8d032c17d0" />
+
+**Answer**: 39424
 
 ### Question 3 - The adversary uploaded a document to the FTP server. What is the filename?
 
