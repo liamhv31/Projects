@@ -441,7 +441,35 @@ Then, the client checks the current working directory.
 PWD
 257 "/" is current directory.
 ```
-So they are currently in the root (`/`) directory
+So they are currently in the root (`/`) directory. After that, the client requests a directory listing:
+```
+EPSV
+229 Entering Extended Passive Mode (|||58612|)
+LIST
+150 Opening ASCII mode data connection for file list
+226 Transfer complete.
+```
+**EPSV** stands for **Extended Passive Port** and it tells the server to open a random TCP port for data connection. `(|||58612|)` means that the port being opened is **58612**. The `LIST` command is then issued and the directory listing is transferred over that new TCP connection over port **58612**. This next block is where we see our first file.
+```
+TYPE I
+200 Type set to I
+SIZE resume.doc
+213 39424
+```
+Here, the client is checking the file size of **resume.doc**. first, the data representation setting is set to **TYPE I** which specifies that files are transferred byte-for-byte. This ensures that the raw data remains completely unchanged. Then, they check for the file size using the **SIZE** command. Next, the user actually downloads **resume.doc**.
+```
+EPSV
+229 Entering Extended Passive Mode (|||37100|)
+RETR resume.doc
+150 Opening BINARY mode data connection for resume.doc (39424 bytes)
+226 Transfer complete.
+```
+**ESPV** is requests again, and this time TCP port 37100 is opened. Then the file is downloaded using the **RETR** command. The line `150 Opening BINARY mode data connection for resume.doc (39424 bytes)` is the server confirming the request, and then the transfer completes successfully. Then, the client checks the file's modification timestamp using **MDTM**.
+```
+MDTM resume.doc
+213 20070815022252
+```
+The timestamp format is `YYYYMMDDHHMMSS`, which means the last modification date is `2007 08 15 02 22 52`, or `August 15, 2007 at 02:22:52`.
 
 **Answer**: resume.doc
 
