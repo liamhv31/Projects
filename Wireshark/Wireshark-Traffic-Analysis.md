@@ -469,7 +469,24 @@ RETR resume.doc
 MDTM resume.doc
 213 20070815022252
 ```
-The timestamp format is `YYYYMMDDHHMMSS`, which means the last modification date is `2007 08 15 02 22 52`, or `August 15, 2007 at 02:22:52`.
+The timestamp format is `YYYYMMDDHHMMSS`, which means the last modification date is `2007 08 15 02 22 52`, or `August 15, 2007 at 02:22:52`. These next couple of parts are where we finally see the file upload happening.
+```
+CWD uploads
+250 CWD command successful
+
+PWD
+257 "/uploads" is current directory.
+```
+Here, the client changes to the uploads directory and displays the working directory. This next block is the smoking gun.
+```
+EPSV
+229 Entering Extended Passive Mode (|||36986|)
+
+STOR README
+150 Opening BINARY mode data connection for README
+226 Transfer complete.
+```
+We see the same **EPSV** pattern as before, followed by the **STOR** command being used to upload a file called **README**. This file also has no file extension. We can end the stream analysis here as the rest is irrelevant to the question. We should have see **resume.doc** being uploaded. Even though this is the wrong answer, it is the answer they want. You also can't say that there may be another event where the adversary does upload the other file because this is the only **STOR** packet in the whole pcap. I suppose it's possible that was from an older version of this lab and they simply forgot to update the answer
 
 **Answer**: resume.doc
 
