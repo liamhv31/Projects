@@ -486,11 +486,22 @@ STOR README
 150 Opening BINARY mode data connection for README
 226 Transfer complete.
 ```
-We see the same **EPSV** pattern as before, followed by the **STOR** command being used to upload a file called **README**. This file also has no file extension. We can end the stream analysis here as the rest is irrelevant to the question. We should have see **resume.doc** being uploaded. Even though this is the wrong answer, it is the answer they want. You also can't say that there may be another event where the adversary does upload the other file because this is the only **STOR** packet in the whole pcap. I suppose it's possible that was from an older version of this lab and they simply forgot to update the answer
+We see the same **EPSV** pattern as before, followed by the **STOR** command being used to upload a file called **README**. This file also has no file extension. We can end the stream analysis here as the rest is irrelevant to the question. We should have seen **resume.doc** being uploaded. Even though this is the wrong answer, it is the answer they want. You also can't say that there may be another event where the adversary does upload the other file because this is the only **STOR** packet in the whole pcap. I suppose it's possible that was from an older version of this lab and they simply forgot to update the answer
 
 **Answer**: resume.doc
 
 ### Question 4 - The adversary tried to assign special flags to change the executing permissions of the uploaded file. What is the command used by the adversary?
+This answer can actually be found by exploring the TCP stream we were previously looking at even further. Scroll down until you find this block:
+```
+SITE CHMOD 777 resume.doc
+550 resume.doc: Permission denied
+```
+The client attempted to set full read, write, and execute permissions for the owner, group, and others. This would mean that anyone on the system could do anything with the file. `chmod` is a Unix command that is used to change the permissions of files and directories. It uses a 0-7 numbering system to assign permissions for each permission group, where each of the three numbers represents a different permission group. Below is a helpful little table that shows each possible value.
+
+<img width="346" height="307" alt="image" src="https://github.com/user-attachments/assets/4ecf2b58-c031-4cb6-b6e9-52fa26d1656d" />
+
+
+**Answer**: CHMOD 777
 
 ## Part 6 - Cleartext Protocol Analysis: HTTP
 
