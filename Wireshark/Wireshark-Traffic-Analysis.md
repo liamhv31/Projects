@@ -538,7 +538,7 @@ This gives us four in total. The only problem with this is that it's not the ans
 
 <img width="407" height="173" alt="image" src="https://github.com/user-attachments/assets/9110f156-d140-4e3a-8520-53bea9fee2b3" />
 
-The adversary tried to be sneaky and make this look like a natural user-agent, but Grammarly wasn't installed on their system.
+The adversary tried to be sneaky and make this look like a natural user-agent, but Grammarly wasn't installed on their system. This still isn't the right answer. We need one more. This last one took me quite some time to find
 
 ### Question 2 - What is the packet number with a subtle spelling difference in the user agent field?
 
