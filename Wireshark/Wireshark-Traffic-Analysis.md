@@ -570,7 +570,11 @@ User-Agent = product *( RWS ( product / comment ) )
 ```
 This means each user-agent _should_ contain "one or more product identifiers, each followed by zero or more comments". [Section 5.6.5](https://datatracker.ietf.org/doc/html/rfc9110#comments) of the same document actually defines what a comment is. Any text you see in the user-agent strings surrounded by parentheses is a comment. E.g., from user-agent three: `(Windows; U; Windows NT 6.4; en-US)`. So, the bare minimum user-agent _should_ look something like this: `product-name[/version]`. That would mean that the user-agent `Wfuzz/2.4` is actually structurally normal, but still suspicious given the application being identified. One more thing to take note of is the versions of the software being used, and do they align. Do the different product identifiers align with each other? With that in mind, let's look at the first user-agent in the leftover list.
 
-`Google Chrome/83.0.4103.116 Windows` is a bit of an odd one, it's a bit weird structurally. _Typically_, you see the browser details at the end of the string (like in our other samples above). Also the OS details is usually listed in the comments (again, like the other samples). There was a version `83.0.4103.116` for Chrome
+`Google Chrome/83.0.4103.116 Windows` is a bit of an odd one, it's a bit weird structurally. _Typically_, you see the browser details at the end of the string (like in our other samples above). Also the OS details are usually listed in the comments (again, like the other samples). There was a version `83.0.4103.116` for Chrome, so that's not an indicator. We can mark this as the possible sixth offender and continue the analysis.
+
+`Microsoft-WNS/10.0` is a structurally and logically sound user-agent. This represents (structurally) the bare minimum of what a user-agent _should_ be. The application represented is the real Microsoft Windows Push Notifications Services.
+
+`Mozilla/5.0 (Windows; U; Windows NT 6.4; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10` is another interesting one.
 
 ### Question 2 - What is the packet number with a subtle spelling difference in the user agent field?
 
