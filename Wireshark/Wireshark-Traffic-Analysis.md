@@ -564,7 +564,13 @@ Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0
 Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:100.0) Gecko/20100101 Firefox/100.0
 ```
 We first need to have a better understanding of user-agents, and the best place for that is [section 10.1.5 of the RFC 9110 publication
-](https://datatracker.ietf.org/doc/html/rfc9110#section-10.1.5).
+](https://datatracker.ietf.org/doc/html/rfc9110#section-10.1.5). This essentially states what a user-agent is. You'll notice that the language in the definition makes it sound optional, using the word "SHOULD" a lot. The user-agent is **not** a forced requirement. A client can send an HTTP request without one. Though, you may experience more blocked requests if you manipulate the request to not send one if services treat that as suspicious from an anonymity perspective. The formula for the user-agent is defined as followed:
+```
+User-Agent = product *( RWS ( product / comment ) )
+```
+This means each user-agent _should_ contain "one or more product identifiers, each followed by zero or more comments". [Section 5.6.5](https://datatracker.ietf.org/doc/html/rfc9110#comments) of the same document actually defines what a comment is. Any text you see in the user-agent strings surrounded by parentheses is a comment. E.g., from user-agent three: `(Windows; U; Windows NT 6.4; en-US)`. So, the bare minimum user-agent _should_ look something like this: `product-name[/version]`. That would mean that the user-agent `Wfuzz/2.4` is actually structurally normal, but still suspicious given the application being identified. One more thing to take note of is the versions of the software being used, and do they align. Do the different product identifiers align with each other? With that in mind, let's look at the first user-agent in the leftover list.
+
+`Google Chrome/83.0.4103.116 Windows` is a bit of an odd one, it's a bit weird structurally. _Typically_, you see the browser details at the end of the string (like in our other samples above). Also the OS details is usually listed in the comments (again, like the other samples). There was a version `83.0.4103.116` for Chrome
 
 ### Question 2 - What is the packet number with a subtle spelling difference in the user agent field?
 
