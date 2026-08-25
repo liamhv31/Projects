@@ -578,7 +578,7 @@ This means each user-agent _should_ contain "one or more product identifiers, ea
 
 Now let's looks at Chrome. This user-agent specifies versions **[8.0.552.237](https://chromereleases.googleblog.com/2011/01/chrome-stable-release.html)**. This was released in January 12, 2011, long before Windows NT 6.4 was being used. By January 2014, the stable channel version of Chrome was already 32.0.1700.103. This means that someone would have to purposefully downgrade their Chrome version, which doesn't really make much sense from a security or features perspective. I would rank this one as the most suspicious so far. The previous one is also unusual though, since that is not normally how Chrome identifies itself.
 
-`Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.82 Safari/537.36`
+The remaining user-agent strings all appear to be normal.
 
 ### Question 2 - What is the packet number with a subtle spelling difference in the user agent field?
 
