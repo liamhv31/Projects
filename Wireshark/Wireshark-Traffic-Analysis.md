@@ -634,9 +634,13 @@ We already revealed this during our analysis of the previous question.
 
 ### Question 4 - Investigate the decrypted packets and find the flag! What is the flag?
 
-### Question 29 - What is the packet number of the credentials using "HTTP Basic Auth"?
+## Part 8 - Bonus: Hunt Cleartext Credentials!
 
-### Question 30 - What is the packet number where "empty password" was submitted?
+### Question 1 - What is the packet number of the credentials using "HTTP Basic Auth"?
+
+### Question 2 - What is the packet number where "empty password" was submitted?
+
+## Part 9 - Bonus: Actionable Results!
 
 ### Question 31 - Select packet number 99. Create a rule for "IPFirewall (ipfw)". What is the rule for "denying source IPv4 address"?
 
