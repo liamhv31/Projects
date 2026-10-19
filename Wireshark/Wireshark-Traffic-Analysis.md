@@ -627,8 +627,40 @@ We already revealed this during our analysis of the previous question.
 ## Part 7 - Encrypted Protocol Analysis: Decrypting HTTPS
 
 ### Question 1 - What is the frame number of the "Client Hello" message sent to "accounts.google.com"?
+A "Client Hello" message is the first message sent by a client to a server in a TLS handshake to establish an HTTPS connection. These messages are then responded to be the server with a "Server Hello". These messages can be found in Wireshark with the following query:
+```
+tls.handshake.type == 1
+```
+TLS can be broken into a few different parts. This includes the TLS record layer (header), handshake header and fields, and optional extensions. The extensions portion of a TLS handshake is for adding additional information or functionality. This tells the server things like which server the client intends to communicate with, which versions of TLS are supported, supported signature algorithms, etc.
+
+<img width="481" height="478" alt="image" src="https://github.com/user-attachments/assets/f553bf19-0c7c-4bf1-94dd-193635afff52" />
+
+Since we're looking for the server_name of accounts.google.com, we need to modify our filter like so:
+```
+tls.handshake.type == 1 and tls.handshake.extensions_server_name == "accounts.google.com"
+```
+This returns one packet.
+
+**Answer**: 16
 
 ### Question 2 - Decrypt the traffic with the "KeysLogFile.txt" file. What is the number of HTTP2 packets?
+The provided KeysLogFile.txt file contains unique key pairs which are automatically created per session when a connection is made with TLS. To clarify, these are not public/private key pairs. Rather, they are the secrets used to derive symmetric encryption keys. Each line contains three values: secret type, client random, and secret value. E.g., for the first entry:
+- Secret type (`CLIENT_HANDSHAKE_TRAFFIC_SECRET`): Identifies the purpose and direction of the secret
+- Client random (`f35fff3ca92d297cb03a5f158d65286c7afdd583e6392a84b13a9f7ac431a222`): A 32-byte value from the TLS Client Hello that identifies the corresponding connection in the key log
+- Secret value (`f4ce2a326ffa83c7c1f1fc00e142471438547a951cd6e383f6492a0aa386fcf8`): The actual 32-byte secret used to derive encryption keys
+
+The different secret types and their purposes are as follows:
+- `CLIENT_HANDSHAKE_TRAFFIC_SECRET`: Derives keys to decrypt handshake messages encrypted by the client
+- `SERVER_HANDSHAKE_TRAFFIC_SECRET`: Derives keys to decrypt handshake messages encrypted by the server
+- `CLIENT_TRAFFIC_SECRET_0`: Derives keys to decrypt application data sent from the client to the server
+- `SERVER_TRAFFIC_SECRET_0`: Derives keys to decrypt application data sent from the server to the client
+- `EXPORTER_SECRET`: Used to derive additional cryptographic material for applications that use TLS exporters
+
+The `_0` appended to the two secret types indicates the application traffic secrets being initially generated. In the example below, you can notice multiple client random values:
+
+<img width="1092" height="136" alt="image" src="https://github.com/user-attachments/assets/abe0d862-c02f-4e01-a481-d70e813513bf" />
+
+These represent different TLS connections. Each connection has its own secret
 
 ### Question 3 - Go to Frame 322. What is the authority header of the HTTP2 packet? (Enter the address in defanged format.)
 
