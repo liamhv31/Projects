@@ -660,7 +660,15 @@ The `_0` appended to the two secret types indicates the application traffic secr
 
 <img width="1092" height="136" alt="image" src="https://github.com/user-attachments/assets/abe0d862-c02f-4e01-a481-d70e813513bf" />
 
-These represent different TLS connections. Each connection has its own secret
+These represent different TLS connections. Each connection has its own secret. The way it works in Wireshark is when you add the key file, Wireshark matches the client random of the packet with the corresponding value in the file. It then uses the secret to derive the encryption key and decrypts the TLS traffic. You can actually find the packets that are associated with the various secret entries in Wireshark manually. Take the sample client random from above and search for it as its byte array format (since it's hex):
+```
+tls.handshake.random == f3:5f:ff:3c:a9:2d:29:7c:b0:3a:5f:15:8d:65:28:6c:7a:fd:d5:83:e6:39:2a:84:b1:3a:9f:7a:c4:31:a2:22
+```
+This will return the exact packet its associated with. The client random value shows it represented as a standard string, however you will not be able to search for it unless you do so using byte array format.
+
+<img width="990" height="60" alt="image" src="https://github.com/user-attachments/assets/b4414f0f-c958-4e80-9325-13b62913f876" />
+
+Importantly, these secrets were **not** transmitted over the network as part of the packet. Both endpoints involved independently derive matching secrets. So someone passively listening to the traffic could not capture them. Typically, you would need access to the endpoints themselves. To add the key file, go to **Edit** &rarr; **Preferences**, expand the **Protocols** menu, scroll down to **TLS**, click **browse** beside the **(Pre)-Master-Secret log filename** field, then navigate to and add the `KeysLogFile.txt` file. Click ok to apply. Wireshark will re-process the packet capture and you will now start seeing packets with the **HTTP2** protocol. Before, you would only see TLS, and the HTTP2 data inside was encrypted. Now, you can see the HTTP2 header and application data.
 
 ### Question 3 - Go to Frame 322. What is the authority header of the HTTP2 packet? (Enter the address in defanged format.)
 
